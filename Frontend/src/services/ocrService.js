@@ -4,12 +4,11 @@ const OCR_API_BASE_URL =
   import.meta.env.VITE_OCR_API_BASE_URL ||
   'http://127.0.0.1:8001/api/v1'
 
+const OCR_TIMEOUT_MS = 600000
+
 const ocrClient = axios.create({
   baseURL: OCR_API_BASE_URL,
-
-  // PaddleOCR + TrOCR can take over one minute on CPU.
-  timeout: 180000,
-
+  timeout: OCR_TIMEOUT_MS,
   headers: {
     Accept: 'application/json',
   },
@@ -21,8 +20,8 @@ const getErrorMessage = (error) => {
     error?.code === 'ETIMEDOUT'
   ) {
     return (
-      'The prescription scan exceeded three minutes. ' +
-      'Check the OCR terminal and try again.'
+      'The prescription scan exceeded ten minutes. ' +
+      'Check the OCR terminal before trying again.'
     )
   }
 
@@ -66,7 +65,7 @@ const scanPrescription = async (file) => {
       '/ocr/prescription',
       formData,
       {
-        timeout: 180000,
+        timeout: OCR_TIMEOUT_MS,
       },
     )
 
