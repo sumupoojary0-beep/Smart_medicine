@@ -59,7 +59,7 @@ HANDWRITING_ENABLED = (
 # Medicine names + dosage (e.g. "Amoxicillin 500mg TDS x 5 days")
 # can run longer than typical IAM-dataset training lines — give the
 # model more room rather than truncating mid-word.
-MAX_GENERATED_TOKENS = 96
+MAX_GENERATED_TOKENS = 48
 
 # Wider beams read messier handwriting more accurately but cost more
 # CPU time per line — tune this to trade accuracy for speed on your
@@ -68,7 +68,7 @@ MAX_GENERATED_TOKENS = 96
 HANDWRITING_NUM_BEAMS = int(
     os.getenv(
         "HANDWRITING_NUM_BEAMS",
-        "3",
+        "1",
     )
 )
 
