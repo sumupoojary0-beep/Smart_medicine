@@ -1,47 +1,84 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.core.config import settings
-from app.database.connection import connect_to_mongodb, close_mongodb_connection
-from app.routers.auth_router import router as auth_router
-from app.routers.medicine_router import router as medicine_router
-from app.routers.kendra_router import router as kendra_router
-from app.routers.notification_router import router as notification_router
+from app.database.connection import (
+    close_mongodb_connection,
+    connect_to_mongodb,
+)
 from app.routers.admin_router import router as admin_router
+from app.routers.auth_router import router as auth_router
+from app.routers.kendra_router import router as kendra_router
+from app.routers.medicine_router import router as medicine_router
+from app.routers.notification_router import router as notification_router
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_to_mongodb()
-    yield
-    await close_mongodb_connection()
+
+    try:
+        yield
+    finally:
+        await close_mongodb_connection()
 
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
-# Allow the React dev server (and other local dev ports) to call this API.
-# Without this, browsers silently block every request with a CORS error
-# that never reaches your frontend's error-handling code.
+
+# Allow frontend development servers running on any localhost port.
+# This covers localhost:5173, 127.0.0.1:5173, localhost:5174, etc.
+LOCAL_FRONTEND_ORIGIN_REGEX = (
+    r"^https?://(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$"
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=[],
+    allow_origin_regex=LOCAL_FRONTEND_ORIGIN_REGEX,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+    ],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
+
 
 app.include_router(auth_router)
 app.include_router(medicine_router)
 app.include_router(kendra_router)
 app.include_router(notification_router)
 app.include_router(admin_router)
+
+
 @app.get("/")
 async def root():
     return {
-        "message": "Smart Medicine Availability & Intelligent Janaushadhi Recommendation System Backend is Running"
+        "message": (
+            "Smart Medicine Availability & Intelligent "
+            "Janaushadhi Recommendation System Backend is Running"
+        )
+    }
+
+
+@app.get("/health")
+async def health_check():
+    return {
+        "success": True,
+        "service": "backend",
+        "status": "healthy",
+        "port": 8002,
     }

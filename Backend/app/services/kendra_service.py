@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from datetime import datetime, timezone
 from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import HTTPException, status
@@ -98,21 +97,43 @@ async def get_kendra_by_id(kendra_id: str) -> dict:
     return _serialize_kendra(doc)
 
 
+TRUST_SCORES = {"verified": 1.0, "distributor": 0.7, "unverified": 0.4}
+
+
 async def find_medicine_availability(
     pmbi_code: str,
     lat: float,
     lng: float,
     radius_km: float = DEFAULT_RADIUS_KM,
     only_in_stock: bool = True,
+    weights: dict | None = None,
 ) -> list:
     """
-    Find nearby Kendras that stock a specific medicine.
-
-    Results are sorted by distance and include stock,
-    batch, manufacturer and expiry information.
+    Find nearby Kendras stocking a specific medicine and rank them
+    with the Weighted Sum Model (WSM).
     """
+    weights = weights or {
+        "distance": 0.35,
+        "price": 0.25,
+        "quantity": 0.20,
+        "freshness": 0.10,
+        "trust": 0.10,
+    }
+
+    if abs(sum(weights.values()) - 1.0) > 0.001:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Ranking weights must add up to 1.0.",
+        )
 
     db = get_database()
+
+    medicine = await db[MEDICINES_COLLECTION].find_one(
+        {"pmbi_code": pmbi_code}
+    )
+    default_price = (
+        float(medicine["jan_aushadhi_mrp"]) if medicine else 0.0
+    )
 
     cursor = db[KENDRAS_COLLECTION].find(
         {
@@ -121,17 +142,13 @@ async def find_medicine_availability(
         }
     )
 
-    results = []
+    now = datetime.now(timezone.utc)
+    candidates = []
 
     async for doc in cursor:
         coords = doc["location"]["coordinates"]
 
-        distance = haversine_km(
-            lat,
-            lng,
-            coords[1],
-            coords[0],
-        )
+        distance = haversine_km(lat, lng, coords[1], coords[0])
 
         if distance > radius_km:
             continue
@@ -148,35 +165,65 @@ async def find_medicine_availability(
         if not stock_item:
             continue
 
-        total_quantity = stock_item.get("total_qty", 0)
+        total_qty = stock_item.get("total_qty", 0)
 
-        if only_in_stock and total_quantity <= 0:
+        if only_in_stock and total_qty <= 0:
             continue
 
-        active_batches = sorted(
+        batches = sorted(
             [
-                batch
-                for batch in stock_item.get("batches", [])
-                if batch.get("quantity", 0) > 0
+                b
+                for b in stock_item.get("batches", [])
+                if b.get("quantity", 0) > 0
             ],
-            key=lambda batch: batch["expiry_date"],
+            key=lambda b: b["expiry_date"],
         )
+        first = batches[0] if batches else None
 
-        batch_information = [
+        expiry = first["expiry_date"] if first else None
+        if expiry is not None and expiry.tzinfo is None:
+            expiry = expiry.replace(tzinfo=timezone.utc)
+        days_to_expiry = max((expiry - now).days, 0) if expiry else 0
+
+        candidates.append(
             {
-                "batch_number": batch["batch_number"],
-                "manufacturer": batch["manufacturer"],
-                "expiry_date": batch["expiry_date"],
-                "quantity": batch["quantity"],
+                "doc": doc,
+                "coords": coords,
+                "distance": distance,
+                "total_qty": total_qty,
+                "stock_item": stock_item,
+                "batches": batches,
+                "expiry": expiry,
+                "days": days_to_expiry,
+                "price": (
+                    float(first.get("selling_price") or default_price)
+                    if first
+                    else default_price
+                ),
+                "verification": (first or {}).get(
+                    "verification_status", "unverified"
+                ),
             }
-            for batch in active_batches
-        ]
-
-        nearest_expiry = (
-            active_batches[0]["expiry_date"]
-            if active_batches
-            else None
         )
+
+    if not candidates:
+        return []
+
+    max_dist = max(c["distance"] for c in candidates) or 1.0
+    max_price = max(c["price"] for c in candidates) or 1.0
+
+    results = []
+
+    for c in candidates:
+        scores = {
+            "distance": 1 - c["distance"] / max_dist,
+            "price": 1 - c["price"] / max_price,
+            "quantity": min(c["total_qty"] / 50, 1),
+            "freshness": min(c["days"] / 365, 1),
+            "trust": TRUST_SCORES.get(c["verification"], 0.4),
+        }
+        wsm = sum(weights[k] * scores[k] for k in weights)
+        doc = c["doc"]
 
         results.append(
             {
@@ -184,22 +231,44 @@ async def find_medicine_availability(
                 "kendra_name": doc["name"],
                 "address": doc["address"],
                 "phone": doc.get("phone"),
-                "latitude": coords[1],
-                "longitude": coords[0],
-                "distance_km": round(distance, 2),
-                "total_qty": total_quantity,
-                "status": stock_item.get(
-                    "status",
-                    "out_of_stock",
-                ),
-                "nearest_expiry": nearest_expiry,
-                "batches": batch_information,
+                "latitude": c["coords"][1],
+                "longitude": c["coords"][0],
+                "distance_km": round(c["distance"], 2),
+                "price": round(c["price"], 2),
+                "total_qty": c["total_qty"],
+                "status": c["stock_item"].get("status", "out_of_stock"),
+                "nearest_expiry": c["expiry"],
+                "days_to_expiry": c["days"],
+                "verification_status": c["verification"],
+                "wsm_score": round(wsm, 4),
+                "score_breakdown": {
+                    "distance_score": round(scores["distance"], 4),
+                    "price_score": round(scores["price"], 4),
+                    "quantity_score": round(scores["quantity"], 4),
+                    "freshness_score": round(scores["freshness"], 4),
+                    "trust_score": round(scores["trust"], 4),
+                },
+                "weights_used": weights,
+                "batches": [
+                    {
+                        "batch_number": b["batch_number"],
+                        "manufacturer": b["manufacturer"],
+                        "expiry_date": b["expiry_date"],
+                        "quantity": b["quantity"],
+                        "selling_price": b.get("selling_price"),
+                        "verification_status": b.get(
+                            "verification_status", "unverified"
+                        ),
+                    }
+                    for b in c["batches"]
+                ],
             }
         )
 
-    results.sort(
-        key=lambda result: result["distance_km"]
-    )
+    results.sort(key=lambda r: r["wsm_score"], reverse=True)
+
+    for rank, r in enumerate(results, start=1):
+        r["rank"] = rank
 
     return results
 

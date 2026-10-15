@@ -30,7 +30,7 @@ function PriceComparisonSection({ prices = {} }) {
     genericPrice = 38,
   } = prices
 
-  const savings        = brandPrice - genericPrice
+  const savings        = Math.round((brandPrice - genericPrice) * 100) / 100
   const savingsPct     = Math.round((savings / brandPrice) * 100)
   const genericBarPct  = Math.round((genericPrice / brandPrice) * 100)
 
@@ -70,7 +70,7 @@ function PriceComparisonSection({ prices = {} }) {
             <p className="text-[11px] font-semibold text-success-500 uppercase tracking-wider">
               You Save
             </p>
-            <p className="text-3xl font-extrabold text-success-700">₹{savings}</p>
+            <p className="text-3xl font-extrabold text-success-700">₹{savings.toFixed(2)}</p>
             <Badge variant="success" size="sm">{savingsPct}% off</Badge>
             <p className="text-[10px] text-success-500 mt-1">
               {/* TODO: Actual savings from API */}

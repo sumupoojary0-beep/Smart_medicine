@@ -1,3 +1,4 @@
+import difflib
 import re
 from typing import Optional
 from bson import ObjectId
@@ -13,6 +14,7 @@ from app.schemas.medicine_schemas import (
 from app.core.constants import MEDICINES_COLLECTION, MEDICINE_NOT_FOUND
 from app.utils.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE
 from app.utils.logger import logger
+from app.utils.brand_aliases import BRAND_TO_GENERIC, INGREDIENT_REGEX
 
 
 def _serialize(doc: dict) -> dict:
@@ -51,6 +53,128 @@ async def create_medicine(data: MedicineCreateRequest) -> dict:
         "message": "Medicine created successfully.",
         "id": str(result.inserted_id),
     }
+
+
+# =====================================================
+# Brand / spelling fallback for search
+# =====================================================
+
+_QUERY_NOISE = {
+    "tab", "tabs", "tablet", "tablets", "cap", "caps", "capsule",
+    "capsules", "syrup", "inj", "injection", "mg", "ip",
+}
+_VOCAB_STOPWORDS = {
+    "tablets", "tablet", "capsules", "capsule", "injection", "suspension",
+    "gastro", "resistant", "resistance", "release", "prolonged",
+    "sustained", "extended", "hydrochloride", "sodium", "potassium",
+    "oral", "solution", "powder", "cream", "ointment", "drops", "syrup",
+    "tablets", "enteric", "coated", "chewable", "dispersible", "eye",
+}
+_ingredient_vocab_cache: dict = {"words": None}
+
+
+async def _ingredient_vocabulary(db) -> list[str]:
+    """Distinct ingredient-like words from the catalogue (built once)."""
+    if _ingredient_vocab_cache["words"] is None:
+        words: set[str] = set()
+        cursor = db[MEDICINES_COLLECTION].find(
+            {"is_active": {"$ne": False}},
+            {"generic_name": 1, "composition": 1},
+        )
+        async for doc in cursor:
+            for field in ("composition", "generic_name"):
+                for word in re.findall(r"[A-Za-z]{5,}", doc.get(field) or ""):
+                    word = word.lower()
+                    if word not in _VOCAB_STOPWORDS:
+                        words.add(word)
+        _ingredient_vocab_cache["words"] = sorted(words)
+    return _ingredient_vocab_cache["words"]
+
+
+def resolve_query_to_ingredients(
+    query: str,
+    vocabulary: list[str],
+) -> Optional[tuple[list[str], str]]:
+    """
+    Turn a brand name or a misspelled ingredient into ingredient name(s).
+    Returns (ingredients, how) or None when nothing can be resolved
+    reliably. `how` is "brand" or "spelling".
+    """
+    cleaned = re.sub(r"[^a-z\s]", " ", query.lower())
+    words = [w for w in cleaned.split() if w not in _QUERY_NOISE]
+    if not words:
+        return None
+
+    for key in (" ".join(words[:2]), words[0]):
+        if key in BRAND_TO_GENERIC:
+            return list(BRAND_TO_GENERIC[key]), "brand"
+
+    close_brand = difflib.get_close_matches(
+        words[0], list(BRAND_TO_GENERIC), n=1, cutoff=0.85
+    )
+    if close_brand:
+        return list(BRAND_TO_GENERIC[close_brand[0]]), "brand"
+
+    close_word = difflib.get_close_matches(words[0], vocabulary, n=1, cutoff=0.8)
+    if close_word:
+        return [close_word[0]], "spelling"
+
+    return None
+
+
+def _ingredient_filter(ingredients: list[str]) -> dict:
+    clauses = []
+    for ingredient in ingredients:
+        pattern = INGREDIENT_REGEX.get(ingredient, re.escape(ingredient))
+        clauses.append(
+            {
+                "$or": [
+                    {"generic_name": {"$regex": pattern, "$options": "i"}},
+                    {"composition": {"$regex": pattern, "$options": "i"}},
+                ]
+            }
+        )
+    return {"$and": clauses}
+
+
+def _rank_fallback_results(docs: list, ingredients: list[str], query: str) -> list:
+    """
+    Order brand/spelling-fallback results so the closest equivalents come
+    first: a strength written in the query, then medicines whose
+    ingredients are exactly the wanted ones (not combinations), then
+    oral tablets/capsules, then everything else.
+    """
+    numbers = set(re.findall(r"\d+(?:\.\d+)?", query))
+
+    def ingredient_count(doc: dict) -> int:
+        text = doc.get("composition") or doc.get("generic_name") or ""
+        parts = re.split(r"\s*(?:\+|,|&|\band\b)\s*", text, flags=re.IGNORECASE)
+        return len([p for p in parts if re.search(r"[A-Za-z]{3,}", p)])
+
+    def form_rank(doc: dict) -> int:
+        name = (doc.get("generic_name") or "").lower()
+        if re.search(r"\b(tablet|tablets|capsule|capsules|tab|caps)\b", name):
+            return 0
+        if re.search(r"\b(syrup|suspension|solution|drops)\b", name):
+            return 1
+        return 2
+
+    def strength_hit(doc: dict) -> bool:
+        if not numbers:
+            return False
+        text = f"{doc.get('generic_name', '')} {doc.get('composition', '')}"
+        found = set(re.findall(r"(?<![\d.])(\d+(?:\.\d+)?)\s*(?:mg|mcg|g|ml|iu)\b", text, flags=re.IGNORECASE))
+        return bool(numbers & found)
+
+    return sorted(
+        docs,
+        key=lambda d: (
+            not strength_hit(d),
+            abs(ingredient_count(d) - len(ingredients)),
+            form_rank(d),
+            d.get("brand_name", ""),
+        ),
+    )
 
 
 async def search_medicines(
@@ -110,22 +234,70 @@ async def search_medicines(
 
     total = await db[MEDICINES_COLLECTION].count_documents(mongo_filter)
 
-    cursor = (
-        db[MEDICINES_COLLECTION]
-        .find(mongo_filter)
-        .skip((page - 1) * page_size)
-        .limit(page_size)
-        .sort("brand_name", 1)
-    )
+    resolved_info = None
 
-    results = [_serialize(doc) async for doc in cursor]
+    # Nothing matched the typed text: the query may be a brand that is not
+    # in the catalogue (e.g. "Amlodac") or a misspelled ingredient. Look up
+    # its ingredient(s) and return the Jan Aushadhi generics instead.
+    if total == 0 and query and query.strip():
+        vocabulary = await _ingredient_vocabulary(db)
+        resolution = resolve_query_to_ingredients(query, vocabulary)
 
-    return {
+        if resolution:
+            ingredients, how = resolution
+            fallback_filter: dict = {
+                "is_active": {"$ne": False},
+                **_ingredient_filter(ingredients),
+            }
+            if category:
+                fallback_filter["category"] = category
+
+            fallback_total = await db[MEDICINES_COLLECTION].count_documents(
+                fallback_filter
+            )
+            if fallback_total:
+                mongo_filter = fallback_filter
+                total = fallback_total
+                resolved_info = {
+                    "query": query.strip(),
+                    "ingredients": ingredients,
+                    "matched_via": how,
+                }
+
+    if resolved_info:
+        # The fallback set is small (one ingredient), so rank it in Python.
+        matched_docs = [
+            doc
+            async for doc in db[MEDICINES_COLLECTION].find(mongo_filter)
+        ]
+        ranked = _rank_fallback_results(
+            matched_docs,
+            resolved_info["ingredients"],
+            resolved_info["query"],
+        )
+        start = (page - 1) * page_size
+        results = [_serialize(doc) for doc in ranked[start:start + page_size]]
+    else:
+        cursor = (
+            db[MEDICINES_COLLECTION]
+            .find(mongo_filter)
+            .skip((page - 1) * page_size)
+            .limit(page_size)
+            .sort("brand_name", 1)
+        )
+
+        results = [_serialize(doc) async for doc in cursor]
+
+    response = {
         "total": total,
         "page": page,
         "page_size": page_size,
         "results": results,
     }
+    if resolved_info:
+        response["resolved_from"] = resolved_info
+
+    return response
 
 
 async def get_medicine_by_id(medicine_id: str) -> dict:

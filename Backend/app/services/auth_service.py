@@ -30,19 +30,10 @@ async def register_user(user_data: RegisterRequest) -> dict:
 
     existing_user = await db.users.find_one({"email": email})
 
-    if existing_user:
-        if existing_user.get("is_email_verified"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email is already registered.",
-            )
-
+    if existing_user and existing_user.get("is_email_verified"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "This email is registered but not verified. "
-                "Use Resend OTP on the verification page."
-            ),
+            detail="Email is already registered.",
         )
 
     otp = generate_otp()
@@ -50,6 +41,51 @@ async def register_user(user_data: RegisterRequest) -> dict:
     otp_expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.OTP_EXPIRE_MINUTES
     )
+
+    if existing_user:
+        # An earlier sign-up with this email was never verified. Refresh the
+        # details and the OTP, then send a new code so the user can continue
+        # to the verification page instead of being locked out.
+        await db.users.update_one(
+            {"_id": existing_user["_id"]},
+            {
+                "$set": {
+                    "full_name": user_data.full_name.strip(),
+                    "phone_number": user_data.phone_number.strip(),
+                    "hashed_password": hash_password(user_data.password),
+                    "otp_hash": otp_hash,
+                    "otp_expires_at": otp_expires_at,
+                    "otp_created_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        try:
+            await send_registration_otp(
+                recipient_email=email,
+                recipient_name=user_data.full_name,
+                otp=otp,
+            )
+        except Exception as error:
+            logger.error(f"OTP email delivery failed for {email}: {error}")
+
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "The verification email could not be sent. "
+                    "Please try again."
+                ),
+            )
+
+        logger.info(f"Registration OTP re-sent to unverified user: {email}")
+
+        return {
+            "message": (
+                "This email was not verified yet. "
+                "A new OTP has been sent to your email."
+            ),
+            "email": email,
+        }
 
     new_user = UserModel(
         full_name=user_data.full_name.strip(),
