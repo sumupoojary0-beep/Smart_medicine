@@ -161,7 +161,13 @@ function AppRouter() {
             Layout Integration — User / Patient Routes
             ProtectedRoute: patient | doctor roles
             ===================================================== */}
-        <Route element={<ProtectedRoute allowedRoles={[USER_ROLES.PATIENT, USER_ROLES.DOCTOR]} />}>
+        <Route element={<ProtectedRoute 
+allowedRoles={[
+  USER_ROLES.PATIENT,
+  USER_ROLES.DOCTOR,
+  USER_ROLES.PHARMACIST,
+]}
+ />}>
           <Route element={<UserLayout />}>
             {/* Dashboard */}
             <Route path="dashboard"               element={<UserDashboard />} />
