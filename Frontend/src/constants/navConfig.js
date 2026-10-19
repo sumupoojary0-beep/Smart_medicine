@@ -22,6 +22,9 @@ import {
   HiOutlineExclamationTriangle,
   HiOutlineDocumentText,
   HiOutlineReceiptPercent,
+  HiOutlinePlusCircle,
+  HiOutlineArrowUpTray,
+  HiOutlineUserPlus,
 } from 'react-icons/hi2'
 import {
   MdDashboard,
@@ -63,8 +66,12 @@ export const USER_NAV = [
 export const PHARMACY_NAV = [
   { type: 'item', label: 'Dashboard',         to: ROUTES.PHARMACY.DASHBOARD,     icon: MdDashboard },
   { type: 'group', label: 'Management' },
-  { type: 'item', label: 'Inventory',         to: ROUTES.PHARMACY.INVENTORY,     icon: MdInventory2 },
+  { type: 'item', label: 'Inventory Overview', to: ROUTES.PHARMACY.INVENTORY_DASHBOARD, icon: HiOutlineChartBar },
+  { type: 'item', label: 'Inventory',         to: ROUTES.PHARMACY.INVENTORY,     icon: MdInventory2, end: true },
+  { type: 'item', label: 'Add Stock',         to: ROUTES.PHARMACY.INVENTORY_ADD, icon: HiOutlinePlusCircle },
+  { type: 'item', label: 'Import Supplier Bill', to: ROUTES.PHARMACY.INVENTORY_IMPORT, icon: HiOutlineArrowUpTray },
   { type: 'item', label: 'Billing',           to: ROUTES.PHARMACY.BILLING,       icon: HiOutlineReceiptPercent },
+  { type: 'item', label: 'Bill History',      to: ROUTES.PHARMACY.BILL_HISTORY,  icon: HiOutlineDocumentText },
   { type: 'item', label: 'Prescriptions',     to: ROUTES.PHARMACY.PRESCRIPTIONS, icon: HiOutlineClipboardDocument },
   { type: 'group', label: 'Account' },
   { type: 'item', label: 'Pharmacy Profile',  to: ROUTES.PHARMACY.PROFILE,       icon: MdLocalPharmacy },
@@ -76,6 +83,7 @@ export const ADMIN_NAV = [
   { type: 'group', label: 'Management' },
   { type: 'item',  label: 'Users',           to: ROUTES.ADMIN.USERS,         icon: HiOutlineUsers },
   { type: 'item',  label: 'Pharmacies',      to: ROUTES.ADMIN.PHARMACIES,    icon: MdLocalPharmacy },
+  { type: 'item',  label: 'Pharmacy Requests', to: ROUTES.ADMIN.PHARMACY_REQUESTS, icon: HiOutlineUserPlus },
   { type: 'item',  label: 'Medicines',       to: ROUTES.ADMIN.MEDICINES,     icon: MdMedication },
   { type: 'item',  label: 'Inventory',       to: ROUTES.ADMIN.INVENTORY,     icon: HiOutlineArchiveBox },
   { type: 'item',  label: 'Expiry Monitor',  to: ROUTES.ADMIN.EXPIRY,        icon: HiOutlineExclamationTriangle },

@@ -108,6 +108,7 @@ app.add_middleware(
 
 
 
+
 # =====================================================
 
 # Upload configuration
@@ -1082,3 +1083,5 @@ async def scan_prescription(
         ):
 
             os.remove(temporary_path)
+from app.bill_ocr import router as bill_router
+app.include_router(bill_router)

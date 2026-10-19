@@ -179,6 +179,12 @@ function AddMedicinePage() {
             Choose a medicine from the Jan Aushadhi catalogue and add a stock batch
           </p>
         </div>
+        <Link
+          to={ROUTES.PHARMACY.INVENTORY_IMPORT}
+          className="ml-auto inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-primary-600 text-xs font-semibold text-primary-700 hover:bg-primary-50 transition-colors"
+        >
+          Import from supplier bill
+        </Link>
       </div>
 
       {!kendraId && (

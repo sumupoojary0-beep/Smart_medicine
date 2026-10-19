@@ -207,6 +207,21 @@ function RegisterPage() {
           Sign in
         </Link>
       </p>
+
+      <p className="text-center text-sm text-slate-500 mt-3">
+        Own a Jan Aushadhi Kendra?{' '}
+
+        <Link
+          to={ROUTES.REGISTER_PHARMACY}
+          className="font-medium text-primary-600
+                     hover:text-primary-700 hover:underline
+                     focus-visible:outline-none
+                     focus-visible:ring-2
+                     focus-visible:ring-primary-500 rounded"
+        >
+          Register your pharmacy
+        </Link>
+      </p>
     </div>
   )
 }

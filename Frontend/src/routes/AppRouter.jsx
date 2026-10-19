@@ -70,6 +70,7 @@ function PageLoader() {
 // =====================================================
 import LoginPage          from '../pages/auth/LoginPage'
 import RegisterPage       from '../pages/auth/RegisterPage'
+import PharmacyRegisterPage from '../pages/auth/PharmacyRegisterPage'
 import VerifyOtpPage      from '../pages/auth/VerifyOtpPage'
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage'
 import ResetPasswordPage  from '../pages/auth/ResetPasswordPage'
@@ -110,6 +111,9 @@ const InventoryPage     = lazy(() => import('../pages/pharmacy/InventoryPage'))
 const BillingPage       = lazy(() => import('../pages/pharmacy/BillingPage'))
 const MedicineFormPage  = lazy(() => import('../pages/pharmacy/MedicineFormPage'))
 const AddMedicinePage   = lazy(() => import('../pages/pharmacy/AddMedicinePage'))
+const ImportStockPage   = lazy(() => import('../pages/pharmacy/ImportStockPage'))
+const InventoryDashboard = lazy(() => import('../pages/pharmacy/InventoryDashboard'))
+const BillHistoryPage   = lazy(() => import('../pages/pharmacy/BillHistoryPage'))
 
 // =====================================================
 // Admin Pages — lazy loaded
@@ -117,6 +121,7 @@ const AddMedicinePage   = lazy(() => import('../pages/pharmacy/AddMedicinePage')
 const AdminDashboard      = lazy(() => import('../pages/admin/AdminDashboard'))
 const AdminUsers          = lazy(() => import('../pages/admin/AdminUsers'))
 const AdminPharmacies     = lazy(() => import('../pages/admin/AdminPharmacies'))
+const AdminPharmacyRequests = lazy(() => import('../pages/admin/AdminPharmacyRequests'))
 const AdminMedicines      = lazy(() => import('../pages/admin/AdminMedicines'))
 const AdminInventory      = lazy(() => import('../pages/admin/AdminInventory'))
 const AdminExpiry         = lazy(() => import('../pages/admin/AdminExpiry'))
@@ -151,6 +156,7 @@ function AppRouter() {
           <Route element={<AuthLayout />}>
             <Route path="login"           element={<LoginPage />} />
             <Route path="register"        element={<RegisterPage />} />
+            <Route path="register/pharmacy" element={<PharmacyRegisterPage />} />
             <Route path="verify-otp"      element={<VerifyOtpPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="reset-password"  element={<ResetPasswordPage />} />
@@ -197,8 +203,11 @@ allowedRoles={[
             <Route path="pharmacy/dashboard"          element={<PharmacyDashboard />} />
             <Route path="pharmacy/inventory"          element={<InventoryPage />} />
             <Route path="pharmacy/inventory/add"      element={<AddMedicinePage />} />
+            <Route path="pharmacy/inventory/import"   element={<ImportStockPage />} />
             <Route path="pharmacy/inventory/edit/:id" element={<MedicineFormPage />} />
             <Route path="pharmacy/billing"            element={<BillingPage />} />
+            <Route path="pharmacy/bill-history"       element={<BillHistoryPage />} />
+            <Route path="pharmacy/inventory-dashboard" element={<InventoryDashboard />} />
             {/* TODO: prescriptions page in future module */}
             <Route path="pharmacy/prescriptions"      element={<InventoryPage />} />
             {/* TODO: pharmacy profile page in future module */}
@@ -215,6 +224,7 @@ allowedRoles={[
             <Route path="admin/dashboard"         element={<AdminDashboard />} />
             <Route path="admin/users"             element={<AdminUsers />} />
             <Route path="admin/pharmacies"        element={<AdminPharmacies />} />
+            <Route path="admin/pharmacy-requests" element={<AdminPharmacyRequests />} />
             <Route path="admin/medicines"         element={<AdminMedicines />} />
             <Route path="admin/inventory"         element={<AdminInventory />} />
             <Route path="admin/expiry"            element={<AdminExpiry />} />

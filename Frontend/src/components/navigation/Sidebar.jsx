@@ -111,6 +111,7 @@ function NavItem({ item, collapsed }) {
   return (
     <NavLink
       to={item.to}
+      end={item.end}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         `${ITEM_BASE} ${isActive ? ITEM_ACTIVE : ITEM_IDLE}`

@@ -14,6 +14,7 @@ export const ROUTES = {
   // Authentication
   LOGIN: '/login',
   REGISTER: '/register',
+  REGISTER_PHARMACY: '/register/pharmacy',
   VERIFY_OTP: '/verify-otp',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
@@ -39,10 +40,13 @@ export const ROUTES = {
   // ─── Pharmacy Routes ─────────────────────────────────────────────────────
   PHARMACY: {
     DASHBOARD:      '/pharmacy/dashboard',
+    INVENTORY_DASHBOARD: '/pharmacy/inventory-dashboard',
     INVENTORY:      '/pharmacy/inventory',
     INVENTORY_ADD:  '/pharmacy/inventory/add',
+    INVENTORY_IMPORT: '/pharmacy/inventory/import',
     INVENTORY_EDIT: '/pharmacy/inventory/edit/:id',
     BILLING:        '/pharmacy/billing',
+    BILL_HISTORY:   '/pharmacy/bill-history',
     PRESCRIPTIONS:  '/pharmacy/prescriptions',
     PROFILE:        '/pharmacy/profile',
   },
@@ -52,6 +56,7 @@ export const ROUTES = {
     DASHBOARD:    '/admin/dashboard',
     USERS:        '/admin/users',
     PHARMACIES:   '/admin/pharmacies',
+    PHARMACY_REQUESTS: '/admin/pharmacy-requests',
     MEDICINES:    '/admin/medicines',
     INVENTORY:    '/admin/inventory',
     EXPIRY:       '/admin/expiry',

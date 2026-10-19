@@ -7,6 +7,7 @@
  * - Kendra details
  * - Stock restocking
  * - FIFO billing
+ * - Inventory dashboard and bill history
  */
 
 import axiosClient from '../config/axiosClient'
@@ -154,6 +155,92 @@ const kendraService = {
   ) =>
     axiosClient.post(
       `/kendras/${encodeURIComponent(kendraId)}/bill`,
+      data,
+    ),
+
+  /**
+   * Inventory dashboard: stock counts, low / out of stock,
+   * near-expiry and expired batches, sales and recent activity.
+   */
+  getInventoryDashboard: kendraId =>
+    axiosClient.get(
+      `/kendras/${encodeURIComponent(kendraId)}/inventory/dashboard`,
+    ),
+
+  /**
+   * Bill history, newest first.
+   * params: { page, page_size, search, payment_method, date_from, date_to }
+   */
+  getBills: (
+    kendraId,
+    params,
+  ) =>
+    axiosClient.get(
+      `/kendras/${encodeURIComponent(kendraId)}/bills`,
+      { params },
+    ),
+
+  /**
+   * One bill with its line items and the batches used.
+   */
+  getBill: (
+    kendraId,
+    billId,
+  ) =>
+    axiosClient.get(
+      `/kendras/${encodeURIComponent(kendraId)}/bills/${encodeURIComponent(billId)}`,
+    ),
+
+  /**
+   * Shop details printed on invoices (GSTIN, drug licence no.)
+   * plus the last bill number used.
+   */
+  getBillingDetails: kendraId =>
+    axiosClient.get(
+      `/kendras/${encodeURIComponent(kendraId)}/billing-details`,
+    ),
+
+  /**
+   * Save { gstin, drug_license_no, next_bill_number? }.
+   */
+  updateBillingDetails: (
+    kendraId,
+    data,
+  ) =>
+    axiosClient.put(
+      `/kendras/${encodeURIComponent(kendraId)}/billing-details`,
+      data,
+    ),
+
+  /**
+   * Read a supplier bill (photo / PDF / Excel / CSV) and return the rows it
+   * contains, matched to the catalogue. Saves nothing.
+   */
+  previewStockImport: (
+    kendraId,
+    file,
+  ) => {
+    const form = new FormData()
+    form.append('file', file)
+    return axiosClient.post(
+      `/kendras/${encodeURIComponent(kendraId)}/stock-import/preview`,
+      form,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 300000,
+      },
+    )
+  },
+
+  /**
+   * Add the reviewed rows of a supplier bill to stock.
+   */
+  confirmStockImport: (
+    kendraId,
+    data,
+  ) =>
+    axiosClient.post(
+      `/kendras/${encodeURIComponent(kendraId)}/stock-import/confirm`,
       data,
     ),
 }

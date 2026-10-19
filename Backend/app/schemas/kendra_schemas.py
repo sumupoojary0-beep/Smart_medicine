@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, field_validator
 
 
 VerificationStatus = Literal[
@@ -148,16 +150,60 @@ class BillItemRequest(BaseModel):
     )
 
 
+PaymentMethod = Literal[
+    "cash",
+    "upi",
+    "card",
+]
+
+
 class BillRequest(BaseModel):
     items: List[BillItemRequest] = Field(
         ...,
         min_length=1,
     )
 
+    # "Patient" on the printed invoice
+    customer_name: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
+
+    customer_phone: Optional[str] = Field(
+        default=None,
+        max_length=20,
+    )
+
+    # "Dr:" on the printed invoice
+    doctor_name: Optional[str] = Field(
+        default=None,
+        max_length=100,
+    )
+
+    discount: float = Field(
+        default=0.0,
+        ge=0,
+        description="Flat discount in rupees, taken off the MRP total.",
+    )
+
+    gst_percentage: float = Field(
+        default=0.0,
+        ge=0,
+        le=28,
+        description=(
+            "GST rate already INCLUDED in the MRP. The invoice shows how "
+            "much of the bill is tax (CGST + SGST); it is not added on top."
+        ),
+    )
+
+    payment_method: PaymentMethod = "cash"
+
 
 class BillLineItemResponse(BaseModel):
     pmbi_code: str
     medicine_name: str
+    item_name: str
+    pack_size: Optional[str] = None
     quantity: int
     unit_price: float
     line_total: float
@@ -166,7 +212,57 @@ class BillLineItemResponse(BaseModel):
 
 class BillResponse(BaseModel):
     bill_id: str
+    bill_number: str
     kendra_id: str
+    kendra: dict
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
+    doctor_name: Optional[str] = None
     items: List[BillLineItemResponse]
+    subtotal: float
+    discount: float
+    taxable_value: float
+    gst_percentage: float
+    cgst: float
+    sgst: float
+    gst_amount: float
+    round_off: float
     total_amount: float
+    payment_method: PaymentMethod
+    billed_by_name: Optional[str] = None
     billed_at: datetime
+
+
+GSTIN_PATTERN = re.compile(r"^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$")
+
+
+class BillingDetailsRequest(BaseModel):
+    """Shop details printed on every invoice."""
+
+    gstin: Optional[str] = Field(default=None, max_length=15)
+    drug_license_no: Optional[str] = Field(default=None, max_length=120)
+    next_bill_number: Optional[int] = Field(
+        default=None,
+        ge=1,
+        description=(
+            "Continue an existing bill book: the next bill gets this number. "
+            "Must be higher than the last number used."
+        ),
+    )
+
+    @field_validator("gstin")
+    @classmethod
+    def _check_gstin(cls, v):
+        if v is None or not v.strip():
+            return None
+        v = v.strip().upper()
+        if not GSTIN_PATTERN.match(v):
+            raise ValueError("GSTIN must be 15 characters, e.g. 29DPSPS0749G1Z5.")
+        return v
+
+    @field_validator("drug_license_no")
+    @classmethod
+    def _clean_dl(cls, v):
+        if v is None or not v.strip():
+            return None
+        return v.strip()
