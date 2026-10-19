@@ -15,7 +15,7 @@ from app.routers.medicine_router import router as medicine_router
 from app.routers.notification_router import router as notification_router
 from app.routers.report_router import router as report_router
 from app.routers.pharmacy_registration_router import router as pharmacy_registration_router
-
+from app.routers.admin_kendra_router import router as admin_kendra_router
 
 
 @asynccontextmanager
@@ -59,7 +59,7 @@ app.add_middleware(
     max_age=600,
 )
 
-
+app.include_router(admin_kendra_router)
 app.include_router(auth_router)
 app.include_router(medicine_router)
 app.include_router(kendra_router)
