@@ -188,6 +188,7 @@ export function AuthProvider({ children }) {
     const { data } = await authService.verifyOtp({
       email: payload.email.trim().toLowerCase(),
       otp: payload.otp,
+      flow: payload.flow ?? 'register',
     })
 
     return data
@@ -213,6 +214,7 @@ export function AuthProvider({ children }) {
   try {
     const { data } = await authService.resendOtp({
       email: payload.email.trim().toLowerCase(),
+      flow: payload.flow ?? 'register',
     })
 
     return data

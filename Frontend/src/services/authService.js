@@ -31,8 +31,8 @@ const authService = {
     axiosClient.post(`/auth/verify-otp?flow=${encodeURIComponent(flow)}`, { email, otp }),
 
   // Backend takes email as a query param, no body
-  resendOtp: ({ email }) =>
-  axiosClient.post('/auth/resend-otp', { email }),
+  resendOtp: ({ email, flow = 'register' }) =>
+    axiosClient.post(`/auth/resend-otp?flow=${encodeURIComponent(flow)}`, { email }),
 
   forgotPassword: (data) => axiosClient.post('/auth/forgot-password', data),
 

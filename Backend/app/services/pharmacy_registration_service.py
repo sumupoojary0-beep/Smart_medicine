@@ -68,9 +68,11 @@ async def _owned_kendra_ids(db) -> set[str]:
     return owned
 
 
-async def _pending_kendra_ids(db) -> set[str]:
+async def _pending_kendra_ids(db, exclude_email: str | None = None) -> set[str]:
     pending = set()
     async for req in db[REQUESTS_COLLECTION].find({"status": "PENDING"}):
+        if exclude_email and req.get("email") == exclude_email:
+            continue
         pending.add(req["kendra_id"])
     return pending
 
@@ -115,7 +117,9 @@ async def register_pharmacy_owner(data: PharmacyRegisterRequest) -> dict:
             status.HTTP_409_CONFLICT,
             "This Kendra already has a registered owner. Contact the admin if this is a mistake.",
         )
-    if kid in await _pending_kendra_ids(db):
+    email = normalize_email(data.email)
+    # the same person retrying (e.g. never got the OTP) may re-submit their own request
+    if kid in await _pending_kendra_ids(db, exclude_email=email):
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             "Another request for this Kendra is already waiting for approval.",
@@ -129,8 +133,7 @@ async def register_pharmacy_owner(data: PharmacyRegisterRequest) -> dict:
         password=data.password,
     ))
 
-    email = normalize_email(data.email)
-    await db[REQUESTS_COLLECTION].insert_one({
+    fields = {
         "email": email,
         "full_name": data.full_name.strip(),
         "phone_number": data.phone_number.strip(),
@@ -143,7 +146,14 @@ async def register_pharmacy_owner(data: PharmacyRegisterRequest) -> dict:
         "created_at": _now(),
         "decided_at": None,
         "decided_by": None,
-    })
+    }
+    # register_user lets an unverified e-mail sign up again; keep ONE pending request per person
+    existing = await db[REQUESTS_COLLECTION].find_one({"email": email, "status": "PENDING"})
+    if existing:
+        fields.pop("created_at")
+        await db[REQUESTS_COLLECTION].update_one({"_id": existing["_id"]}, {"$set": fields})
+    else:
+        await db[REQUESTS_COLLECTION].insert_one(fields)
     return {
         "message": (
             "Account created. Verify the OTP sent to your e-mail; "

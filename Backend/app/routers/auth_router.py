@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.schemas.auth_schemas import (
+    ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
     ResendOTPRequest,
+    ResetPasswordRequest,
     TokenResponse,
     VerifyOTPRequest,
 )
@@ -14,6 +16,11 @@ from app.services.auth_service import (
     register_user,
     resend_registration_otp,
     verify_registration_otp,
+)
+from app.services.password_reset_service import (
+    check_reset_otp,
+    forgot_password,
+    reset_password,
 )
 from app.utils.jwt_helper import get_current_user
 
@@ -43,8 +50,11 @@ async def register(user_data: RegisterRequest):
 
 
 @router.post("/verify-otp")
-async def verify_otp(data: VerifyOTPRequest):
-    """Verify the six-digit registration OTP."""
+async def verify_otp(data: VerifyOTPRequest, flow: str = Query(default="register")):
+    """Verify the six-digit OTP (flow=register: sign-up code, flow=reset: password-reset code)."""
+
+    if flow == "reset":
+        return await check_reset_otp(email=data.email, otp=data.otp)
 
     return await verify_registration_otp(
         email=data.email,
@@ -53,12 +63,29 @@ async def verify_otp(data: VerifyOTPRequest):
 
 
 @router.post("/resend-otp")
-async def resend_otp(data: ResendOTPRequest):
+async def resend_otp(data: ResendOTPRequest, flow: str = Query(default="register")):
     """Generate and email a new OTP."""
+
+    if flow == "reset":
+        return await forgot_password(data.email)
 
     return await resend_registration_otp(
         email=data.email,
     )
+
+
+@router.post("/forgot-password")
+async def forgot_password_route(data: ForgotPasswordRequest):
+    """Email a password-reset code (same answer whether or not the account exists)."""
+
+    return await forgot_password(data.email)
+
+
+@router.post("/reset-password")
+async def reset_password_route(data: ResetPasswordRequest):
+    """Check the reset code and save the new password."""
+
+    return await reset_password(data.email, data.otp, data.new_password)
 
 
 @router.post("/login", response_model=TokenResponse)
