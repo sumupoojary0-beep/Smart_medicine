@@ -1,108 +1,114 @@
 /**
- * VoiceSearchModal
+ * VoiceSearchModal — real voice search using the browser Web Speech API.
+ * Works in Chrome / Edge (on localhost or HTTPS). No backend needed.
  *
- * Frontend placeholder for Voice Search functionality.
- *
- * ⚠ PLACEHOLDER — Speech recognition is NOT implemented.
- * TODO: Integrate Web Speech API → window.SpeechRecognition
- *       Backend endpoint: POST /api/v1/search/voice
- *       FastAPI + speech-to-text library (e.g. SpeechBrain, Whisper)
- *
- * Current behaviour:
- *   - Shows animated microphone and "Listening…" state
- *   - After 2.5s auto-populates the search box with a demo result
- *   - Calls onResult(text) which parent uses to fill the search input
- *
- * Props:
- *   isOpen   {boolean}   — controls visibility
- *   onClose  {Function}  — called when modal is dismissed
- *   onResult {Function}  — called with recognised speech text
+ * Props: isOpen, onClose, onResult(text)
  */
-
-import { useState, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { normalizeTranscript } from '../../utils/voiceTranscript'
 import { HiOutlineMicrophone, HiOutlineXMark, HiOutlineStopCircle } from 'react-icons/hi2'
 
-// Demo: simulated speech result after listening period
-// TODO: Replace with real SpeechRecognition API output
-const DEMO_VOICE_RESULTS = [
-  'Paracetamol 500mg',
-  'Dolo 650',
-  'Cetirizine 10mg',
-  'Azithromycin 500',
+const LANGUAGES = [
+  { code: 'en-IN', label: 'English' },
+  { code: 'hi-IN', label: 'हिन्दी' },
+  { code: 'kn-IN', label: 'ಕನ್ನಡ' },
 ]
 
-function VoiceSearchModal({ isOpen, onClose, onResult }) {
-  const [phase, setPhase] = useState('idle') // idle | listening | done
-  const [result, setResult] = useState('')
-  // State resets automatically when modal unmounts (isOpen === false returns null below)
+function getRecognition() {
+  if (typeof window === 'undefined') return null
+  return window.SpeechRecognition || window.webkitSpeechRecognition || null
+}
 
-  const startListening = useCallback(() => {
-    /**
-     * TODO: Replace this simulation with real Web Speech API:
-     *
-     * const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-     * if (!SpeechRecognition) { alert('Speech recognition not supported'); return }
-     * const recognition = new SpeechRecognition()
-     * recognition.lang = 'en-IN'
-     * recognition.onresult = (e) => {
-     *   const text = e.results[0][0].transcript
-     *   setResult(text); setPhase('done')
-     * }
-     * recognition.start()
-     *
-     * FastAPI backend endpoint (future):
-     * POST /api/v1/search/voice  — accepts audio blob, returns transcription
-     */
-    setPhase('listening')
-    const pick = DEMO_VOICE_RESULTS[Math.floor(Math.random() * DEMO_VOICE_RESULTS.length)]
-    setTimeout(() => {
-      setResult(pick)
-      setPhase('done')
-    }, 2500)
+const ERROR_TEXT = {
+  'not-allowed': 'Microphone permission is blocked. Click the lock icon in the address bar, allow the microphone, then retry.',
+  'service-not-allowed': 'Microphone permission is blocked. Allow it in the browser and retry.',
+  'no-speech': "We didn't hear anything. Please try again and speak clearly.",
+  'audio-capture': 'No microphone found. Connect a microphone and retry.',
+  network: 'Speech service needs an internet connection. Check your network and retry.',
+}
+
+function VoiceSearchPanel({ onClose, onResult }) {
+  const [phase, setPhase] = useState('idle') // idle | listening | done | error
+  const [lang, setLang] = useState('en-IN')
+  const [transcript, setTranscript] = useState('')
+  const [error, setError] = useState('')
+  const recRef = useRef(null)
+  const supported = !!getRecognition()
+
+  const stopRec = useCallback(() => {
+    const r = recRef.current
+    recRef.current = null
+    if (r) {
+      r.onresult = r.onerror = r.onend = null
+      try { r.abort() } catch { /* ignore */ }
+    }
   }, [])
 
-  function handleStop() {
-    setPhase('done')
-    if (!result) {
-      setResult(DEMO_VOICE_RESULTS[0])
+  const start = useCallback(() => {
+    const SR = getRecognition()
+    if (!SR) return
+    stopRec()
+    setTranscript('')
+    setError('')
+    const rec = new SR()
+    rec.lang = lang
+    rec.interimResults = true
+    rec.continuous = false
+    rec.maxAlternatives = 1
+    let finalText = ''
+
+    rec.onresult = (e) => {
+      let text = ''
+      for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript
+      finalText = text
+      setTranscript(text)
     }
+    rec.onerror = (e) => {
+      recRef.current = null
+      setError(ERROR_TEXT[e.error] || 'Voice search failed. Please retry.')
+      setPhase('error')
+    }
+    rec.onend = () => {
+      if (recRef.current !== rec) return // already handled by error / stop
+      recRef.current = null
+      if (finalText.trim()) setPhase('done')
+      else { setError(ERROR_TEXT['no-speech']); setPhase('error') }
+    }
+    recRef.current = rec
+    try {
+      rec.start()
+      setPhase('listening')
+    } catch {
+      setError('Could not start the microphone. Please retry.')
+      setPhase('error')
+    }
+  }, [lang, stopRec])
+
+  // Stop the microphone when the panel unmounts (modal closed)
+  useEffect(() => stopRec, [stopRec])
+
+  function handleStop() {
+    const r = recRef.current
+    if (r) { try { r.stop() } catch { /* ignore */ } } // onend decides done / error
   }
 
-  function handleUseResult() {
-    onResult?.(result)
+  function handleUse() {
+    const text = normalizeTranscript(transcript) || transcript.trim()
+    if (text) onResult?.(text)
     onClose?.()
   }
 
-  if (!isOpen) return null
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="voice-modal-title"
-      className="fixed inset-0 z-[400] flex items-center justify-center p-4"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+    <div role="dialog" aria-modal="true" aria-labelledby="voice-modal-title"
+      className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
-      {/* Modal panel */}
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 flex flex-col items-center gap-5">
-
-        {/* Close */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close voice search"
-          className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-        >
+        <button type="button" onClick={onClose} aria-label="Close voice search"
+          className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 transition-colors">
           <HiOutlineXMark size={18} aria-hidden="true" />
         </button>
 
-        {/* Title */}
         <div className="text-center">
           <h2 id="voice-modal-title" className="text-base font-bold text-slate-900 flex items-center gap-2 justify-center">
             <HiOutlineMicrophone size={18} className="text-primary-600" aria-hidden="true" />
@@ -111,121 +117,103 @@ function VoiceSearchModal({ isOpen, onClose, onResult }) {
           <p className="text-xs text-slate-500 mt-1">Speak the medicine name</p>
         </div>
 
-        {/* Microphone animation */}
-        <div className="relative flex items-center justify-center">
-          {/* Pulse rings — shown while listening */}
-          {phase === 'listening' && (
-            <>
-              <span className="absolute w-24 h-24 rounded-full bg-primary-100 animate-ping opacity-40" aria-hidden="true" />
-              <span className="absolute w-20 h-20 rounded-full bg-primary-100 animate-ping opacity-30 delay-75" aria-hidden="true" />
-            </>
-          )}
-          <div className={`flex items-center justify-center w-16 h-16 rounded-full transition-colors ${
-            phase === 'listening' ? 'bg-primary-600' : phase === 'done' ? 'bg-success-600' : 'bg-slate-100'
-          }`}>
-            <HiOutlineMicrophone
-              size={28}
-              className={phase === 'listening' || phase === 'done' ? 'text-white' : 'text-slate-400'}
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-
-        {/* Status text */}
-        <div className="text-center min-h-[3rem] flex flex-col items-center justify-center">
-          {phase === 'idle' && (
-            <p className="text-sm text-slate-600">Press the button to start speaking</p>
-          )}
-          {phase === 'listening' && (
-            <p className="text-sm font-semibold text-primary-700 animate-pulse">
-              Listening…
-            </p>
-          )}
-          {phase === 'done' && result && (
-            <>
-              <p className="text-xs text-slate-500 mb-1">Detected:</p>
-              <p className="text-base font-bold text-slate-900 bg-primary-50 px-4 py-1.5 rounded-lg">
-                {result}
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* Example phrases */}
-        <div className="w-full bg-slate-50 rounded-xl px-4 py-3">
-          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
-            Try saying
+        {!supported ? (
+          <p role="alert" className="text-sm text-center text-danger-700 bg-danger-50 rounded-xl px-4 py-3">
+            Voice search isn&apos;t supported in this browser. Please use Google Chrome or Microsoft Edge, or type the medicine name.
           </p>
-          <div className="flex flex-wrap gap-1.5">
-            {['"Paracetamol"', '"Dolo 650"', '"Cetirizine"'].map(ex => (
-              <span key={ex} className="text-xs text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
-                {ex}
-              </span>
-            ))}
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* Language */}
+            <div role="group" aria-label="Speech language" className="flex gap-1 bg-slate-100 rounded-xl p-1">
+              {LANGUAGES.map((l) => (
+                <button key={l.code} type="button" disabled={phase === 'listening'}
+                  onClick={() => setLang(l.code)} aria-pressed={lang === l.code}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 ${
+                    lang === l.code ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-600'}`}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2 w-full">
-          {phase === 'idle' && (
-            <button
-              type="button"
-              onClick={startListening}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-            >
-              <HiOutlineMicrophone size={16} aria-hidden="true" />
-              Start Listening
-            </button>
-          )}
-          {phase === 'listening' && (
-            <>
-              <button
-                type="button"
-                onClick={handleStop}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-danger-600 text-white text-sm font-bold hover:bg-danger-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
-              >
-                <HiOutlineStopCircle size={16} aria-hidden="true" />
-                Stop
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              >
-                Cancel
-              </button>
-            </>
-          )}
-          {phase === 'done' && (
-            <>
-              <button
-                type="button"
-                onClick={handleUseResult}
-                className="flex-1 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              >
-                Search This
-              </button>
-              <button
-                type="button"
-                onClick={() => { setPhase('idle'); setResult('') }}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-              >
-                Retry
-              </button>
-            </>
-          )}
-        </div>
+            {/* Mic */}
+            <div className="relative flex items-center justify-center">
+              {phase === 'listening' && (
+                <>
+                  <span className="absolute w-24 h-24 rounded-full bg-primary-100 animate-ping opacity-40" aria-hidden="true" />
+                  <span className="absolute w-20 h-20 rounded-full bg-primary-100 animate-ping opacity-30" aria-hidden="true" />
+                </>
+              )}
+              <div className={`flex items-center justify-center w-16 h-16 rounded-full transition-colors ${
+                phase === 'listening' ? 'bg-primary-600' : phase === 'done' ? 'bg-success-600'
+                  : phase === 'error' ? 'bg-danger-100' : 'bg-slate-100'}`}>
+                <HiOutlineMicrophone size={28} aria-hidden="true"
+                  className={phase === 'listening' || phase === 'done' ? 'text-white'
+                    : phase === 'error' ? 'text-danger-600' : 'text-slate-400'} />
+              </div>
+            </div>
 
-        {/* Placeholder notice */}
-        {/* TODO: Integrate Web Speech API (SpeechRecognition) for real voice input.
-                  Backend: POST /api/v1/search/voice — FastAPI + Whisper/SpeechBrain OCR.
-                  This is a frontend placeholder only. */}
-        <p className="text-[10px] text-slate-400 text-center">
-          🎤 Voice Search placeholder — Speech recognition not yet implemented.
-        </p>
+            {/* Status */}
+            <div className="text-center min-h-[3.5rem] flex flex-col items-center justify-center w-full" aria-live="polite">
+              {phase === 'idle' && <p className="text-sm text-slate-600">Press the button and start speaking</p>}
+              {phase === 'listening' && (
+                <>
+                  <p className="text-sm font-semibold text-primary-700 animate-pulse">Listening…</p>
+                  {transcript && <p className="text-sm text-slate-700 mt-1">{transcript}</p>}
+                </>
+              )}
+              {phase === 'done' && (
+                <>
+                  <p className="text-xs text-slate-500 mb-1">Heard:</p>
+                  <p className="text-base font-bold text-slate-900 bg-primary-50 px-4 py-1.5 rounded-lg" data-testid="voice-result">
+                    {normalizeTranscript(transcript) || transcript}
+                  </p>
+                </>
+              )}
+              {phase === 'error' && <p role="alert" className="text-sm text-danger-700">{error}</p>}
+            </div>
+
+            <div className="flex gap-2 w-full">
+              {phase === 'idle' && (
+                <button type="button" onClick={start}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 transition-colors">
+                  <HiOutlineMicrophone size={16} aria-hidden="true" /> Start Listening
+                </button>
+              )}
+              {phase === 'listening' && (
+                <button type="button" onClick={handleStop}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-danger-600 text-white text-sm font-bold hover:bg-danger-700 transition-colors">
+                  <HiOutlineStopCircle size={16} aria-hidden="true" /> Stop
+                </button>
+              )}
+              {phase === 'done' && (
+                <>
+                  <button type="button" onClick={handleUse}
+                    className="flex-1 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 transition-colors">
+                    Search This
+                  </button>
+                  <button type="button" onClick={start}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50">
+                    Retry
+                  </button>
+                </>
+              )}
+              {phase === 'error' && (
+                <button type="button" onClick={start}
+                  className="flex-1 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-bold hover:bg-primary-700 transition-colors">
+                  Try Again
+                </button>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
+}
+
+function VoiceSearchModal({ isOpen, onClose, onResult }) {
+  if (!isOpen) return null // unmounting resets state and stops the mic
+  return <VoiceSearchPanel onClose={onClose} onResult={onResult} />
 }
 
 export default VoiceSearchModal
