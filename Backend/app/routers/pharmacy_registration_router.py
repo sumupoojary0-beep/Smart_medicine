@@ -12,6 +12,7 @@ from app.services.pharmacy_registration_service import (
 )
 from app.utils.constants import UserRole
 from app.utils.jwt_helper import get_current_user, require_role
+from app.utils.rate_limit import ip_limit
 
 router = APIRouter(
     prefix="/api/v1/pharmacy-registration",
@@ -25,7 +26,7 @@ async def open_kendras(q: str = Query(default="", max_length=80), limit: int = Q
     return await search_open_kendras(q, limit)
 
 
-@router.post("/register", status_code=201)
+@router.post("/register", status_code=201, dependencies=[Depends(ip_limit("pharmacy-register", 10, 3600))])
 async def register(data: PharmacyRegisterRequest):
     """Public: create an account + a PENDING pharmacy-owner request."""
     return await register_pharmacy_owner(data)

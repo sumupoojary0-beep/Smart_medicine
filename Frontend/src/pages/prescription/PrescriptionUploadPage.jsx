@@ -1215,7 +1215,9 @@ function PrescriptionUploadPage() {
 
                                 <p className="font-bold text-blue-700">
 
-                                  {candidate.saving_pct ?? 0}%
+                                  {candidate.saving_pct > 0
+                                    ? `${candidate.saving_pct}%`
+                                    : 'No brand data'}
 
                                 </p>
 

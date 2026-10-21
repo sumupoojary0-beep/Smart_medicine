@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, model_validator
 
 class RankingPreferences(BaseModel):
     distance: float = Field(
-        default=0.35,
+        default=0.40,
         ge=0,
         le=1,
     )
@@ -15,7 +15,7 @@ class RankingPreferences(BaseModel):
     )
 
     quantity: float = Field(
-        default=0.20,
+        default=0.25,
         ge=0,
         le=1,
     )
@@ -27,7 +27,7 @@ class RankingPreferences(BaseModel):
     )
 
     trust: float = Field(
-        default=0.10,
+        default=0.0,
         ge=0,
         le=1,
     )

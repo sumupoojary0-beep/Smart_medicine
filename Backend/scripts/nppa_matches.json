@@ -1,0 +1,1253 @@
+[
+ {
+  "pmbi_code": "256",
+  "generic_name": "Salbutamol Tablets IP 2mg",
+  "pack": "10's",
+  "ja_price": 0.94,
+  "nppa_unit_price": 0.16,
+  "nppa_pack_price": 1.6,
+  "nppa_row": "746"
+ },
+ {
+  "pmbi_code": "183",
+  "generic_name": "Dicyclomine Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 0.94,
+  "nppa_unit_price": 0.11,
+  "nppa_pack_price": 1.1,
+  "nppa_row": "267"
+ },
+ {
+  "pmbi_code": "333",
+  "generic_name": "Dexamethasone Tablets IP 0.5 mg",
+  "pack": "10's",
+  "ja_price": 1.88,
+  "nppa_unit_price": 0.19,
+  "nppa_pack_price": 1.9,
+  "nppa_row": "250"
+ },
+ {
+  "pmbi_code": "1236",
+  "generic_name": "Albendazole Tablets IP 400mg",
+  "pack": "1's",
+  "ja_price": 3.4,
+  "nppa_unit_price": 7.68,
+  "nppa_pack_price": 7.68,
+  "nppa_row": "28"
+ },
+ {
+  "pmbi_code": "2490",
+  "generic_name": "Amlodipine Tablets IP 2.5mg",
+  "pack": "15's",
+  "ja_price": 3.75,
+  "nppa_unit_price": 1.65,
+  "nppa_pack_price": 24.75,
+  "nppa_row": "43"
+ },
+ {
+  "pmbi_code": "2140",
+  "generic_name": "Verapamil Tablets IP 40mg",
+  "pack": "10's",
+  "ja_price": 4.22,
+  "nppa_unit_price": 0.74,
+  "nppa_pack_price": 7.4,
+  "nppa_row": "832"
+ },
+ {
+  "pmbi_code": "201",
+  "generic_name": "Metronidazole  Tablets IP 200mg",
+  "pack": "10's",
+  "ja_price": 4.41,
+  "nppa_unit_price": 0.69,
+  "nppa_pack_price": 6.9,
+  "nppa_row": "564"
+ },
+ {
+  "pmbi_code": "912",
+  "generic_name": "Hydrochlorothiazide Tablets IP 12.5mg",
+  "pack": "10's",
+  "ja_price": 5.63,
+  "nppa_unit_price": 0.98,
+  "nppa_pack_price": 9.8,
+  "nppa_row": "413"
+ },
+ {
+  "pmbi_code": "320",
+  "generic_name": "Diazepam Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 5.63,
+  "nppa_unit_price": 1.42,
+  "nppa_pack_price": 14.2,
+  "nppa_row": "260"
+ },
+ {
+  "pmbi_code": "319",
+  "generic_name": "Clonazepam Tablets IP 0.5 mg",
+  "pack": "10's",
+  "ja_price": 5.68,
+  "nppa_unit_price": 3.1,
+  "nppa_pack_price": 31.0,
+  "nppa_row": "211"
+ },
+ {
+  "pmbi_code": "275",
+  "generic_name": "Enalapril Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 5.68,
+  "nppa_unit_price": 3.2,
+  "nppa_pack_price": 32.0,
+  "nppa_row": "302"
+ },
+ {
+  "pmbi_code": "1246",
+  "generic_name": "Fluconazole Tablets IP 150 mg",
+  "pack": "1's",
+  "ja_price": 5.68,
+  "nppa_unit_price": 11.81,
+  "nppa_pack_price": 11.81,
+  "nppa_row": "332"
+ },
+ {
+  "pmbi_code": "1026",
+  "generic_name": "Propranolol Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 5.68,
+  "nppa_unit_price": 1.16,
+  "nppa_pack_price": 11.6,
+  "nppa_row": "699"
+ },
+ {
+  "pmbi_code": "180",
+  "generic_name": "Bisacodyl Tablets IP 5mg",
+  "pack": "10's",
+  "ja_price": 6.19,
+  "nppa_unit_price": 1.0,
+  "nppa_pack_price": 10.0,
+  "nppa_row": "111"
+ },
+ {
+  "pmbi_code": "324",
+  "generic_name": "Flunarizine Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 6.56,
+  "nppa_unit_price": 2.75,
+  "nppa_pack_price": 27.5,
+  "nppa_row": "337"
+ },
+ {
+  "pmbi_code": "2163",
+  "generic_name": "Enalapril Maleate Tablets IP 2.5mg",
+  "pack": "10's",
+  "ja_price": 6.56,
+  "nppa_unit_price": 1.93,
+  "nppa_pack_price": 19.3,
+  "nppa_row": "301"
+ },
+ {
+  "pmbi_code": "1938",
+  "generic_name": "Diazepam Tablets IP 2 mg",
+  "pack": "10's",
+  "ja_price": 6.56,
+  "nppa_unit_price": 1.5,
+  "nppa_pack_price": 15.0,
+  "nppa_row": "259"
+ },
+ {
+  "pmbi_code": "786",
+  "generic_name": "Amitriptyline Hydrochloride Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 6.81,
+  "nppa_unit_price": 2.28,
+  "nppa_pack_price": 22.8,
+  "nppa_row": "38"
+ },
+ {
+  "pmbi_code": "434",
+  "generic_name": "Propranolol Tablets IP 40 mg",
+  "pack": "10's",
+  "ja_price": 6.81,
+  "nppa_unit_price": 2.75,
+  "nppa_pack_price": 27.5,
+  "nppa_row": "700"
+ },
+ {
+  "pmbi_code": "265",
+  "generic_name": "Atenolol Tablets IP 50 mg",
+  "pack": "14's",
+  "ja_price": 6.81,
+  "nppa_unit_price": 1.78,
+  "nppa_pack_price": 24.92,
+  "nppa_row": "79"
+ },
+ {
+  "pmbi_code": "209",
+  "generic_name": "Ondansetron Tablets IP 4 mg",
+  "pack": "10's",
+  "ja_price": 6.81,
+  "nppa_unit_price": 4.69,
+  "nppa_pack_price": 46.9,
+  "nppa_row": "604"
+ },
+ {
+  "pmbi_code": "483",
+  "generic_name": "Loperamide Capsules IP 2 mg",
+  "pack": "10's",
+  "ja_price": 7.22,
+  "nppa_unit_price": 3.57,
+  "nppa_pack_price": 35.7,
+  "nppa_row": "509"
+ },
+ {
+  "pmbi_code": "202",
+  "generic_name": "Metronidazole  Tablets IP 400mg",
+  "pack": "10's",
+  "ja_price": 7.22,
+  "nppa_unit_price": 1.27,
+  "nppa_pack_price": 12.7,
+  "nppa_row": "565"
+ },
+ {
+  "pmbi_code": "329",
+  "generic_name": "Prednisolone Tablets IP 5 mg",
+  "pack": "15's",
+  "ja_price": 7.5,
+  "nppa_unit_price": 0.56,
+  "nppa_pack_price": 8.4,
+  "nppa_row": "687"
+ },
+ {
+  "pmbi_code": "323",
+  "generic_name": "Flunarizine Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 7.5,
+  "nppa_unit_price": 4.72,
+  "nppa_pack_price": 47.2,
+  "nppa_row": "336"
+ },
+ {
+  "pmbi_code": "199",
+  "generic_name": "Metoclopramide Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 7.5,
+  "nppa_unit_price": 1.16,
+  "nppa_pack_price": 11.6,
+  "nppa_row": "555"
+ },
+ {
+  "pmbi_code": "1957",
+  "generic_name": "Risperidone Tablets IP 1mg",
+  "pack": "10's",
+  "ja_price": 7.5,
+  "nppa_unit_price": 3.07,
+  "nppa_pack_price": 30.7,
+  "nppa_row": "736"
+ },
+ {
+  "pmbi_code": "1944",
+  "generic_name": "Escitalopram Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 7.5,
+  "nppa_unit_price": 4.55,
+  "nppa_pack_price": 45.5,
+  "nppa_row": "311"
+ },
+ {
+  "pmbi_code": "293",
+  "generic_name": "Ramipril Tablets IP 2.5 mg",
+  "pack": "10's",
+  "ja_price": 7.94,
+  "nppa_unit_price": 4.96,
+  "nppa_pack_price": 49.6,
+  "nppa_row": "716"
+ },
+ {
+  "pmbi_code": "28",
+  "generic_name": "Tramadol Tablets 50mg",
+  "pack": "10's",
+  "ja_price": 8.25,
+  "nppa_unit_price": 8.04,
+  "nppa_pack_price": 80.4,
+  "nppa_row": "819"
+ },
+ {
+  "pmbi_code": "428",
+  "generic_name": "Digoxin Tablets IP 0.25 mg",
+  "pack": "10's",
+  "ja_price": 8.44,
+  "nppa_unit_price": 1.19,
+  "nppa_pack_price": 11.9,
+  "nppa_row": "273"
+ },
+ {
+  "pmbi_code": "330",
+  "generic_name": "Prednisolone Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 8.44,
+  "nppa_unit_price": 0.97,
+  "nppa_pack_price": 9.7,
+  "nppa_row": "684"
+ },
+ {
+  "pmbi_code": "2691",
+  "generic_name": "Hydrochlorothiazide Tablets IP 25 mg",
+  "pack": "10's",
+  "ja_price": 8.44,
+  "nppa_unit_price": 1.68,
+  "nppa_pack_price": 16.8,
+  "nppa_row": "414"
+ },
+ {
+  "pmbi_code": "1341",
+  "generic_name": "Mebendazole Tablets IP 100 mg",
+  "pack": "6's",
+  "ja_price": 8.44,
+  "nppa_unit_price": 2.92,
+  "nppa_pack_price": 17.52,
+  "nppa_row": "522"
+ },
+ {
+  "pmbi_code": "1042",
+  "generic_name": "Risperidone Tablets IP 4mg",
+  "pack": "10's",
+  "ja_price": 8.44,
+  "nppa_unit_price": 9.97,
+  "nppa_pack_price": 99.7,
+  "nppa_row": "738"
+ },
+ {
+  "pmbi_code": "386",
+  "generic_name": "Diethylcarbamazine Tablets IP 50 mg",
+  "pack": "30's",
+  "ja_price": 9.0,
+  "nppa_unit_price": 0.56,
+  "nppa_pack_price": 16.8,
+  "nppa_row": "270"
+ },
+ {
+  "pmbi_code": "844",
+  "generic_name": "Clonazepam Tablets IP 1mg",
+  "pack": "10's",
+  "ja_price": 9.08,
+  "nppa_unit_price": 4.22,
+  "nppa_pack_price": 42.2,
+  "nppa_row": "212"
+ },
+ {
+  "pmbi_code": "785",
+  "generic_name": "Amitriptyline Hydrochloride Tablets IP 25mg",
+  "pack": "15's",
+  "ja_price": 9.08,
+  "nppa_unit_price": 2.25,
+  "nppa_pack_price": 33.75,
+  "nppa_row": "39"
+ },
+ {
+  "pmbi_code": "325",
+  "generic_name": "Fluoxetine Hydrochloride Capsules IP 20mg",
+  "pack": "10's",
+  "ja_price": 9.08,
+  "nppa_unit_price": 3.64,
+  "nppa_pack_price": 36.4,
+  "nppa_row": "339"
+ },
+ {
+  "pmbi_code": "2773",
+  "generic_name": "Fluconazole Tablets IP 400 mg",
+  "pack": "1's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 31.15,
+  "nppa_pack_price": 31.15,
+  "nppa_row": "334"
+ },
+ {
+  "pmbi_code": "2770",
+  "generic_name": "Zolpidem Tablets IP 5mg",
+  "pack": "10's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 5.37,
+  "nppa_pack_price": 53.7,
+  "nppa_row": "855"
+ },
+ {
+  "pmbi_code": "2255",
+  "generic_name": "Colchicine Tablets 0.5mg",
+  "pack": "10's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 3.1,
+  "nppa_pack_price": 31.0,
+  "nppa_row": "228"
+ },
+ {
+  "pmbi_code": "1958",
+  "generic_name": "Risperidone Tablets IP 2 mg",
+  "pack": "10's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 4.91,
+  "nppa_pack_price": 49.1,
+  "nppa_row": "737"
+ },
+ {
+  "pmbi_code": "1894",
+  "generic_name": "Primaquine Phosphate Tablets IP 2.5 mg",
+  "pack": "10's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 1.55,
+  "nppa_pack_price": 15.5,
+  "nppa_row": "691"
+ },
+ {
+  "pmbi_code": "1166",
+  "generic_name": "Mefenamic Acid Tablets 250 mg",
+  "pack": "10's",
+  "ja_price": 9.38,
+  "nppa_unit_price": 1.93,
+  "nppa_pack_price": 19.3,
+  "nppa_row": "525"
+ },
+ {
+  "pmbi_code": "948",
+  "generic_name": "Lorazepam Tablets IP 1mg",
+  "pack": "10's",
+  "ja_price": 10.31,
+  "nppa_unit_price": 2.06,
+  "nppa_pack_price": 20.6,
+  "nppa_row": "514"
+ },
+ {
+  "pmbi_code": "507",
+  "generic_name": "Carbimazole Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 10.31,
+  "nppa_unit_price": 1.9,
+  "nppa_pack_price": 19.0,
+  "nppa_row": "146"
+ },
+ {
+  "pmbi_code": "336",
+  "generic_name": "Allopurinol Tablets IP 100 mg",
+  "pack": "10's",
+  "ja_price": 10.31,
+  "nppa_unit_price": 1.9,
+  "nppa_pack_price": 19.0,
+  "nppa_row": "29"
+ },
+ {
+  "pmbi_code": "2693",
+  "generic_name": "Hydrocortisone Tablets 5mg",
+  "pack": "10's",
+  "ja_price": 10.31,
+  "nppa_unit_price": 3.02,
+  "nppa_pack_price": 30.2,
+  "nppa_row": "417"
+ },
+ {
+  "pmbi_code": "163",
+  "generic_name": "Tamoxifen Citrate Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 10.31,
+  "nppa_unit_price": 2.57,
+  "nppa_pack_price": 25.7,
+  "nppa_row": "789"
+ },
+ {
+  "pmbi_code": "321",
+  "generic_name": "Escitalopram Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 10.32,
+  "nppa_unit_price": 8.08,
+  "nppa_pack_price": 80.8,
+  "nppa_row": "309"
+ },
+ {
+  "pmbi_code": "294",
+  "generic_name": "Ramipril Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 10.32,
+  "nppa_unit_price": 7.81,
+  "nppa_pack_price": 78.1,
+  "nppa_row": "717"
+ },
+ {
+  "pmbi_code": "1932",
+  "generic_name": "Clomipramine Hydrochloride Tablets 10mg",
+  "pack": "10's",
+  "ja_price": 11.25,
+  "nppa_unit_price": 2.51,
+  "nppa_pack_price": 25.1,
+  "nppa_row": "207"
+ },
+ {
+  "pmbi_code": "271",
+  "generic_name": "Diltiazem Tablets IP 30 mg",
+  "pack": "10's",
+  "ja_price": 11.34,
+  "nppa_unit_price": 2.39,
+  "nppa_pack_price": 23.9,
+  "nppa_row": "278"
+ },
+ {
+  "pmbi_code": "518",
+  "generic_name": "Baclofen Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 12.1,
+  "nppa_unit_price": 10.72,
+  "nppa_pack_price": 107.2,
+  "nppa_row": "94"
+ },
+ {
+  "pmbi_code": "1893",
+  "generic_name": "Primaquine Phosphate Tablets IP 7.5 mg",
+  "pack": "10's",
+  "ja_price": 12.19,
+  "nppa_unit_price": 2.11,
+  "nppa_pack_price": 21.1,
+  "nppa_row": "692"
+ },
+ {
+  "pmbi_code": "949",
+  "generic_name": "Lorazepam Tablets IP 2mg",
+  "pack": "10's",
+  "ja_price": 12.38,
+  "nppa_unit_price": 2.51,
+  "nppa_pack_price": 25.1,
+  "nppa_row": "515"
+ },
+ {
+  "pmbi_code": "499",
+  "generic_name": "Norethisterone Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 13.13,
+  "nppa_unit_price": 5.09,
+  "nppa_pack_price": 50.9,
+  "nppa_row": "594"
+ },
+ {
+  "pmbi_code": "455",
+  "generic_name": "Verapamil Tablets IP 80 mg",
+  "pack": "10's",
+  "ja_price": 13.13,
+  "nppa_unit_price": 1.39,
+  "nppa_pack_price": 13.9,
+  "nppa_row": "833"
+ },
+ {
+  "pmbi_code": "2142",
+  "generic_name": "Warfarin Tablets IP 2mg",
+  "pack": "10's",
+  "ja_price": 14.06,
+  "nppa_unit_price": 2.66,
+  "nppa_pack_price": 26.6,
+  "nppa_row": "840"
+ },
+ {
+  "pmbi_code": "2141",
+  "generic_name": "Warfarin Tablets IP 1mg",
+  "pack": "10's",
+  "ja_price": 14.06,
+  "nppa_unit_price": 2.41,
+  "nppa_pack_price": 24.1,
+  "nppa_row": "839"
+ },
+ {
+  "pmbi_code": "1935",
+  "generic_name": "Clozapine Tablets IP 25 mg",
+  "pack": "10's",
+  "ja_price": 14.06,
+  "nppa_unit_price": 2.51,
+  "nppa_pack_price": 25.1,
+  "nppa_row": "223"
+ },
+ {
+  "pmbi_code": "1906",
+  "generic_name": "Amitriptyline Hydrochloride Tablets IP 50 mg",
+  "pack": "10's",
+  "ja_price": 14.06,
+  "nppa_unit_price": 5.79,
+  "nppa_pack_price": 57.9,
+  "nppa_row": "40"
+ },
+ {
+  "pmbi_code": "392",
+  "generic_name": "Griseofulvin Tablets IP 250 mg",
+  "pack": "10's",
+  "ja_price": 15.0,
+  "nppa_unit_price": 1.59,
+  "nppa_pack_price": 15.9,
+  "nppa_row": "393"
+ },
+ {
+  "pmbi_code": "2048",
+  "generic_name": "Methotrexate Tablets IP 2.5mg",
+  "pack": "10's",
+  "ja_price": 15.0,
+  "nppa_unit_price": 4.77,
+  "nppa_pack_price": 47.7,
+  "nppa_row": "542"
+ },
+ {
+  "pmbi_code": "164",
+  "generic_name": "Tamoxifen Citrate Tablets IP 20 mg",
+  "pack": "10's",
+  "ja_price": 15.0,
+  "nppa_unit_price": 2.9,
+  "nppa_pack_price": 29.0,
+  "nppa_row": "790"
+ },
+ {
+  "pmbi_code": "1110",
+  "generic_name": "Clobazam Tablet IP 5mg",
+  "pack": "10's",
+  "ja_price": 15.47,
+  "nppa_unit_price": 5.12,
+  "nppa_pack_price": 51.2,
+  "nppa_row": "200"
+ },
+ {
+  "pmbi_code": "272",
+  "generic_name": "Diltiazem Tablets IP 60 mg",
+  "pack": "10's",
+  "ja_price": 15.94,
+  "nppa_unit_price": 4.87,
+  "nppa_pack_price": 48.7,
+  "nppa_row": "279"
+ },
+ {
+  "pmbi_code": "1167",
+  "generic_name": "Mefenamic Acid Tablets 500 mg",
+  "pack": "10's",
+  "ja_price": 15.94,
+  "nppa_unit_price": 2.45,
+  "nppa_pack_price": 24.5,
+  "nppa_row": "526"
+ },
+ {
+  "pmbi_code": "1005",
+  "generic_name": "Phenobarbitone Tablets IP 30mg",
+  "pack": "30's",
+  "ja_price": 15.94,
+  "nppa_unit_price": 1.22,
+  "nppa_pack_price": 36.6,
+  "nppa_row": "648"
+ },
+ {
+  "pmbi_code": "194",
+  "generic_name": "Hyoscine Butylbromide Tablets IP 10 mg",
+  "pack": "10's",
+  "ja_price": 16.5,
+  "nppa_unit_price": 2.96,
+  "nppa_pack_price": 29.6,
+  "nppa_row": "427"
+ },
+ {
+  "pmbi_code": "95",
+  "generic_name": "Levofloxacin Tablets IP 250mg",
+  "pack": "10's",
+  "ja_price": 16.88,
+  "nppa_unit_price": 4.4,
+  "nppa_pack_price": 44.0,
+  "nppa_row": "486"
+ },
+ {
+  "pmbi_code": "452",
+  "generic_name": "Warfarin Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 16.88,
+  "nppa_unit_price": 2.35,
+  "nppa_pack_price": 23.5,
+  "nppa_row": "842"
+ },
+ {
+  "pmbi_code": "1154",
+  "generic_name": "Diethylcarbamazine Citrate Tablets IP 100mg",
+  "pack": "30's",
+  "ja_price": 17.0,
+  "nppa_unit_price": 1.41,
+  "nppa_pack_price": 42.3,
+  "nppa_row": "269"
+ },
+ {
+  "pmbi_code": "768",
+  "generic_name": "Acetazolamide Tablets IP 250mg",
+  "pack": "10's",
+  "ja_price": 18.0,
+  "nppa_unit_price": 3.65,
+  "nppa_pack_price": 36.5,
+  "nppa_row": "9"
+ },
+ {
+  "pmbi_code": "1105",
+  "generic_name": "Zolpidem Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 18.57,
+  "nppa_unit_price": 8.42,
+  "nppa_pack_price": 84.2,
+  "nppa_row": "854"
+ },
+ {
+  "pmbi_code": "443",
+  "generic_name": "Isosorbide Dinitrate Tablets IP 5 mg",
+  "pack": "50's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 0.75,
+  "nppa_pack_price": 37.5,
+  "nppa_row": "450"
+ },
+ {
+  "pmbi_code": "322",
+  "generic_name": "Escitalopram Tablets IP 20 mg",
+  "pack": "10's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 12.76,
+  "nppa_pack_price": 127.6,
+  "nppa_row": "310"
+ },
+ {
+  "pmbi_code": "2692",
+  "generic_name": "Hydrocortisone Tablets 10mg",
+  "pack": "10's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 5.87,
+  "nppa_pack_price": 58.7,
+  "nppa_row": "416"
+ },
+ {
+  "pmbi_code": "203",
+  "generic_name": "Misoprostol Tablets IP 200 mcg",
+  "pack": "4's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 16.65,
+  "nppa_pack_price": 66.6,
+  "nppa_row": "571"
+ },
+ {
+  "pmbi_code": "1933",
+  "generic_name": "Clomipramine Hydrochloride Tablets 25mg",
+  "pack": "10's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 5.53,
+  "nppa_pack_price": 55.3,
+  "nppa_row": "208"
+ },
+ {
+  "pmbi_code": "1905",
+  "generic_name": "Amitriptyline Hydrochloride Tablets IP 75 mg",
+  "pack": "10's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 5.59,
+  "nppa_pack_price": 55.9,
+  "nppa_row": "41"
+ },
+ {
+  "pmbi_code": "1298",
+  "generic_name": "Donepezil Tablets IP 5 mg",
+  "pack": "10's",
+  "ja_price": 18.75,
+  "nppa_unit_price": 11.21,
+  "nppa_pack_price": 112.1,
+  "nppa_row": "290"
+ },
+ {
+  "pmbi_code": "269",
+  "generic_name": "Clopidogrel Tablets IP 75mg",
+  "pack": "10's",
+  "ja_price": 19.28,
+  "nppa_unit_price": 6.93,
+  "nppa_pack_price": 69.3,
+  "nppa_row": "213"
+ },
+ {
+  "pmbi_code": "283",
+  "generic_name": "Isosorbide Dinitrate Tablets IP 10mg",
+  "pack": "50's",
+  "ja_price": 19.69,
+  "nppa_unit_price": 0.73,
+  "nppa_pack_price": 36.5,
+  "nppa_row": "449"
+ },
+ {
+  "pmbi_code": "2115",
+  "generic_name": "Methotrexate Tablets IP 5mg",
+  "pack": "10's",
+  "ja_price": 20.0,
+  "nppa_unit_price": 8.35,
+  "nppa_pack_price": 83.5,
+  "nppa_row": "544"
+ },
+ {
+  "pmbi_code": "449",
+  "generic_name": "Spironolactone Tablets IP 25 mg",
+  "pack": "15's",
+  "ja_price": 20.63,
+  "nppa_unit_price": 1.91,
+  "nppa_pack_price": 28.65,
+  "nppa_row": "773"
+ },
+ {
+  "pmbi_code": "337",
+  "generic_name": "Clomiphene Citrate Tablets IP 50mg",
+  "pack": "10's",
+  "ja_price": 20.63,
+  "nppa_unit_price": 8.3,
+  "nppa_pack_price": 83.0,
+  "nppa_row": "206"
+ },
+ {
+  "pmbi_code": "2772",
+  "generic_name": "Fluconazole Tablets IP 200 mg",
+  "pack": "4's",
+  "ja_price": 22.5,
+  "nppa_unit_price": 18.73,
+  "nppa_pack_price": 74.92,
+  "nppa_row": "333"
+ },
+ {
+  "pmbi_code": "52",
+  "generic_name": "Cefadroxil Tablets IP 500 mg",
+  "pack": "10's",
+  "ja_price": 22.69,
+  "nppa_unit_price": 4.02,
+  "nppa_pack_price": 40.2,
+  "nppa_row": "153"
+ },
+ {
+  "pmbi_code": "456",
+  "generic_name": "Atorvastatin Tablets IP 40 mg",
+  "pack": "10's",
+  "ja_price": 22.69,
+  "nppa_unit_price": 19.24,
+  "nppa_pack_price": 192.4,
+  "nppa_row": "82"
+ },
+ {
+  "pmbi_code": "875",
+  "generic_name": "Donepezil Hydrochloride Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 23.44,
+  "nppa_unit_price": 16.0,
+  "nppa_pack_price": 160.0,
+  "nppa_row": "289"
+ },
+ {
+  "pmbi_code": "1936",
+  "generic_name": "Clozapine Tablets IP 50 mg",
+  "pack": "10's",
+  "ja_price": 23.44,
+  "nppa_unit_price": 4.79,
+  "nppa_pack_price": 47.9,
+  "nppa_row": "224"
+ },
+ {
+  "pmbi_code": "1813",
+  "generic_name": "Telmisartan Tablets IP 80mg",
+  "pack": "10's",
+  "ja_price": 24.96,
+  "nppa_unit_price": 10.02,
+  "nppa_pack_price": 100.2,
+  "nppa_row": "793"
+ },
+ {
+  "pmbi_code": "413",
+  "generic_name": "Methotrexate Tablets IP 7.5 mg",
+  "pack": "10's",
+  "ja_price": 25.0,
+  "nppa_unit_price": 11.55,
+  "nppa_pack_price": 115.5,
+  "nppa_row": "543"
+ },
+ {
+  "pmbi_code": "1375",
+  "generic_name": "Phenobarbitone Tablets IP 60 mg",
+  "pack": "30's",
+  "ja_price": 26.25,
+  "nppa_unit_price": 1.76,
+  "nppa_pack_price": 52.8,
+  "nppa_row": "649"
+ },
+ {
+  "pmbi_code": "2222",
+  "generic_name": "Allopurinol Tablets IP 300 mg",
+  "pack": "10's",
+  "ja_price": 28.13,
+  "nppa_unit_price": 7.46,
+  "nppa_pack_price": 74.6,
+  "nppa_row": "30"
+ },
+ {
+  "pmbi_code": "1681",
+  "generic_name": "Levetiracetam Tablets IP 250 mg",
+  "pack": "10's",
+  "ja_price": 28.13,
+  "nppa_unit_price": 5.83,
+  "nppa_pack_price": 58.3,
+  "nppa_row": "477"
+ },
+ {
+  "pmbi_code": "1502",
+  "generic_name": "Amiodarone Tablets IP 100 mg",
+  "pack": "10's",
+  "ja_price": 29.06,
+  "nppa_unit_price": 5.7,
+  "nppa_pack_price": 57.0,
+  "nppa_row": "36"
+ },
+ {
+  "pmbi_code": "2114",
+  "generic_name": "Methotrexate Tablets IP 10mg",
+  "pack": "10's",
+  "ja_price": 30.0,
+  "nppa_unit_price": 12.11,
+  "nppa_pack_price": 121.1,
+  "nppa_row": "541"
+ },
+ {
+  "pmbi_code": "1574",
+  "generic_name": "Clobazam Tablets IP 10 mg",
+  "pack": "15's",
+  "ja_price": 30.0,
+  "nppa_unit_price": 9.01,
+  "nppa_pack_price": 135.15,
+  "nppa_row": "199"
+ },
+ {
+  "pmbi_code": "375",
+  "generic_name": "Quinine Sulphate Tablets IP 300 mg",
+  "pack": "10's",
+  "ja_price": 31.0,
+  "nppa_unit_price": 5.71,
+  "nppa_pack_price": 57.1,
+  "nppa_row": "711"
+ },
+ {
+  "pmbi_code": "935",
+  "generic_name": "Letrozole Tablets IP 2.5mg",
+  "pack": "10's",
+  "ja_price": 31.88,
+  "nppa_unit_price": 40.65,
+  "nppa_pack_price": 406.5,
+  "nppa_row": "474"
+ },
+ {
+  "pmbi_code": "2426",
+  "generic_name": "Leflunomide 10mg Tablets",
+  "pack": "10's",
+  "ja_price": 32.81,
+  "nppa_unit_price": 9.98,
+  "nppa_pack_price": 99.8,
+  "nppa_row": "472"
+ },
+ {
+  "pmbi_code": "96",
+  "generic_name": "Levofloxacin Tablets IP 500mg",
+  "pack": "10's",
+  "ja_price": 34.03,
+  "nppa_unit_price": 8.04,
+  "nppa_pack_price": 80.4,
+  "nppa_row": "488"
+ },
+ {
+  "pmbi_code": "509",
+  "generic_name": "Hydroxychloroquine Tablets IP 200 mg",
+  "pack": "10's",
+  "ja_price": 34.18,
+  "nppa_unit_price": 5.91,
+  "nppa_pack_price": 59.1,
+  "nppa_row": "422"
+ },
+ {
+  "pmbi_code": "2748",
+  "generic_name": "Spironolactone Tablets IP 50 mg",
+  "pack": "15's",
+  "ja_price": 34.22,
+  "nppa_unit_price": 3.79,
+  "nppa_pack_price": 56.85,
+  "nppa_row": "774"
+ },
+ {
+  "pmbi_code": "2116",
+  "generic_name": "Methylprednisolone Tablets IP 16mg",
+  "pack": "10's",
+  "ja_price": 37.5,
+  "nppa_unit_price": 8.89,
+  "nppa_pack_price": 88.9,
+  "nppa_row": "549"
+ },
+ {
+  "pmbi_code": "1937",
+  "generic_name": "Clozapine Tablets IP 100 mg",
+  "pack": "10's",
+  "ja_price": 37.5,
+  "nppa_unit_price": 7.72,
+  "nppa_pack_price": 77.2,
+  "nppa_row": "222"
+ },
+ {
+  "pmbi_code": "18",
+  "generic_name": "Azithromycin Tablets IP 250 mg",
+  "pack": "6's",
+  "ja_price": 42.19,
+  "nppa_unit_price": 10.52,
+  "nppa_pack_price": 63.12,
+  "nppa_row": "91"
+ },
+ {
+  "pmbi_code": "412",
+  "generic_name": "Azathioprine Tablets IP 50 mg",
+  "pack": "10's",
+  "ja_price": 45.0,
+  "nppa_unit_price": 10.12,
+  "nppa_pack_price": 101.2,
+  "nppa_row": "87"
+ },
+ {
+  "pmbi_code": "2134",
+  "generic_name": "Ribavirin Capsules USP 200mg",
+  "pack": "4's",
+  "ja_price": 50.0,
+  "nppa_unit_price": 83.4,
+  "nppa_pack_price": 333.6,
+  "nppa_row": "721"
+ },
+ {
+  "pmbi_code": "55",
+  "generic_name": "Cefixime Tablets IP 200 mg",
+  "pack": "10's",
+  "ja_price": 52.55,
+  "nppa_unit_price": 9.57,
+  "nppa_pack_price": 95.7,
+  "nppa_row": "161"
+ },
+ {
+  "pmbi_code": "430",
+  "generic_name": "Amiodarone Tablets IP 200 mg",
+  "pack": "10's",
+  "ja_price": 55.31,
+  "nppa_unit_price": 11.29,
+  "nppa_pack_price": 112.9,
+  "nppa_row": "37"
+ },
+ {
+  "pmbi_code": "391",
+  "generic_name": "Moxifloxacin Tablets 400 mg",
+  "pack": "5's",
+  "ja_price": 61.88,
+  "nppa_unit_price": 25.26,
+  "nppa_pack_price": 126.3,
+  "nppa_row": "576"
+ },
+ {
+  "pmbi_code": "360",
+  "generic_name": "Mifepristone Tablets IP 200 mg",
+  "pack": "1's",
+  "ja_price": 62.81,
+  "nppa_unit_price": 320.77,
+  "nppa_pack_price": 320.77,
+  "nppa_row": "569"
+ },
+ {
+  "pmbi_code": "1199",
+  "generic_name": "Hydroxyurea Capsules IP 500mg",
+  "pack": "10's",
+  "ja_price": 66.0,
+  "nppa_unit_price": 12.78,
+  "nppa_pack_price": 127.8,
+  "nppa_row": "425"
+ },
+ {
+  "pmbi_code": "380",
+  "generic_name": "Clarithromycin Tablets IP 500 mg",
+  "pack": "4's",
+  "ja_price": 67.5,
+  "nppa_unit_price": 49.21,
+  "nppa_pack_price": 196.84,
+  "nppa_row": "195"
+ },
+ {
+  "pmbi_code": "933",
+  "generic_name": "Leflunomide Tablets IP 20mg",
+  "pack": "10's",
+  "ja_price": 69.38,
+  "nppa_unit_price": 19.48,
+  "nppa_pack_price": 194.8,
+  "nppa_row": "473"
+ },
+ {
+  "pmbi_code": "508",
+  "generic_name": "Levetiracetam Tablets IP 500 mg",
+  "pack": "10's",
+  "ja_price": 69.83,
+  "nppa_unit_price": 11.79,
+  "nppa_pack_price": 117.9,
+  "nppa_row": "478"
+ },
+ {
+  "pmbi_code": "505",
+  "generic_name": "Carbimazole Tablets IP 10 mg",
+  "pack": "100's",
+  "ja_price": 72.19,
+  "nppa_unit_price": 3.69,
+  "nppa_pack_price": 369.0,
+  "nppa_row": "145"
+ },
+ {
+  "pmbi_code": "301",
+  "generic_name": "Tranexamic Acid Tablets IP  500 mg",
+  "pack": "10's",
+  "ja_price": 74.0,
+  "nppa_unit_price": 17.32,
+  "nppa_pack_price": 173.2,
+  "nppa_row": "822"
+ },
+ {
+  "pmbi_code": "740",
+  "generic_name": "Clarithromycin Tablets IP 250 mg",
+  "pack": "10's",
+  "ja_price": 76.88,
+  "nppa_unit_price": 27.92,
+  "nppa_pack_price": 279.2,
+  "nppa_row": "194"
+ },
+ {
+  "pmbi_code": "1476",
+  "generic_name": "Hydroxychloroquine Tablet IP 400 mg",
+  "pack": "10's",
+  "ja_price": 76.88,
+  "nppa_unit_price": 11.91,
+  "nppa_pack_price": 119.1,
+  "nppa_row": "423"
+ },
+ {
+  "pmbi_code": "377",
+  "generic_name": "Clindamycin Capsules IP 300 mg",
+  "pack": "10's",
+  "ja_price": 84.38,
+  "nppa_unit_price": 23.56,
+  "nppa_pack_price": 235.6,
+  "nppa_row": "197"
+ },
+ {
+  "pmbi_code": "2479",
+  "generic_name": "Thalidomide Capsules 50mg",
+  "pack": "10's",
+  "ja_price": 84.38,
+  "nppa_unit_price": 35.19,
+  "nppa_pack_price": 351.9,
+  "nppa_row": "806"
+ },
+ {
+  "pmbi_code": "1612",
+  "generic_name": "Entecavir Tablets IP 0.5 mg",
+  "pack": "10's",
+  "ja_price": 93.75,
+  "nppa_unit_price": 79.55,
+  "nppa_pack_price": 795.5,
+  "nppa_row": "305"
+ },
+ {
+  "pmbi_code": "956",
+  "generic_name": "Mefloquine Hydrochloride Tablets IP 250mg",
+  "pack": "4's",
+  "ja_price": 106.88,
+  "nppa_unit_price": 50.83,
+  "nppa_pack_price": 203.32,
+  "nppa_row": "527"
+ },
+ {
+  "pmbi_code": "806",
+  "generic_name": "Bicalutamide Tablets IP 50mg",
+  "pack": "10's",
+  "ja_price": 128.44,
+  "nppa_unit_price": 68.41,
+  "nppa_pack_price": 684.1,
+  "nppa_row": "109"
+ },
+ {
+  "pmbi_code": "2477",
+  "generic_name": "Thalidomide Capsules 100mg",
+  "pack": "10's",
+  "ja_price": 150.0,
+  "nppa_unit_price": 60.92,
+  "nppa_pack_price": 609.2,
+  "nppa_row": "805"
+ },
+ {
+  "pmbi_code": "382",
+  "generic_name": "Linezolid Tablets IP 600 mg",
+  "pack": "10's",
+  "ja_price": 154.69,
+  "nppa_unit_price": 32.94,
+  "nppa_pack_price": 329.4,
+  "nppa_row": "507"
+ },
+ {
+  "pmbi_code": "972",
+  "generic_name": "Mycophenolate Mofetil Tablets IP 500mg",
+  "pack": "10's",
+  "ja_price": 180.0,
+  "nppa_unit_price": 81.89,
+  "nppa_pack_price": 818.9,
+  "nppa_row": "578"
+ },
+ {
+  "pmbi_code": "2026",
+  "generic_name": "Etoposide Capsules IP 50 mg",
+  "pack": "8's",
+  "ja_price": 202.5,
+  "nppa_unit_price": 54.21,
+  "nppa_pack_price": 433.68,
+  "nppa_row": "322"
+ },
+ {
+  "pmbi_code": "916",
+  "generic_name": "Imatinib Mesylate Tablets IP 400mg",
+  "pack": "10's",
+  "ja_price": 210.94,
+  "nppa_unit_price": 229.24,
+  "nppa_pack_price": 2292.4,
+  "nppa_row": "438"
+ },
+ {
+  "pmbi_code": "1187",
+  "generic_name": "Cyclosporine Capsules IP 100 mg",
+  "pack": "5's",
+  "ja_price": 230.0,
+  "nppa_unit_price": 102.2,
+  "nppa_pack_price": 511.0,
+  "nppa_row": "236"
+ },
+ {
+  "pmbi_code": "1435",
+  "generic_name": "Capecitabine Tablets IP 500mg",
+  "pack": "10's",
+  "ja_price": 234.38,
+  "nppa_unit_price": 126.01,
+  "nppa_pack_price": 1260.1,
+  "nppa_row": "137"
+ },
+ {
+  "pmbi_code": "1214",
+  "generic_name": "Gefitinib Tablets IP 250 mg",
+  "pack": "10's",
+  "ja_price": 412.5,
+  "nppa_unit_price": 427.35,
+  "nppa_pack_price": 4273.5,
+  "nppa_row": "356"
+ },
+ {
+  "pmbi_code": "882",
+  "generic_name": "Efavirenz Tablets IP 600mg",
+  "pack": "30's",
+  "ja_price": 510.0,
+  "nppa_unit_price": 70.81,
+  "nppa_pack_price": 2124.3,
+  "nppa_row": "300"
+ },
+ {
+  "pmbi_code": "1218",
+  "generic_name": "Temozolomide Capsules IP 250 mg",
+  "pack": "5's",
+  "ja_price": 2517.19,
+  "nppa_unit_price": 4672.75,
+  "nppa_pack_price": 23363.75,
+  "nppa_row": "796"
+ }
+]

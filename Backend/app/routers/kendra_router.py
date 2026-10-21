@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 
 from app.schemas.kendra_schemas import (
     RestockRequest,
@@ -8,7 +8,10 @@ from app.schemas.kendra_schemas import (
 )
 from app.schemas.stock_import_schemas import StockImportConfirmRequest
 from app.schemas.token_schema import TokenPayload
-from app.utils.jwt_helper import require_role
+from typing import Optional
+
+from app.utils.jwt_helper import get_optional_user, require_role
+from app.services.user_preference_service import get_user_ranking_preferences
 from app.utils.constants import UserRole
 from app.services.kendra_service import (
     DEFAULT_RADIUS_KM,
@@ -86,36 +89,37 @@ async def medicine_nearby(
         le=50,
     ),
     only_in_stock: bool = Query(default=True),
-    distance_weight: float = Query(
-        default=0.35,
+    distance_weight: Optional[float] = Query(
+        default=None,
         ge=0,
         le=1,
         description="WSM weight for shorter distance",
     ),
-    price_weight: float = Query(
-        default=0.25,
+    price_weight: Optional[float] = Query(
+        default=None,
         ge=0,
         le=1,
         description="WSM weight for lower price",
     ),
-    quantity_weight: float = Query(
-        default=0.20,
+    quantity_weight: Optional[float] = Query(
+        default=None,
         ge=0,
         le=1,
         description="WSM weight for stock quantity",
     ),
-    freshness_weight: float = Query(
-        default=0.10,
+    freshness_weight: Optional[float] = Query(
+        default=None,
         ge=0,
         le=1,
         description="WSM weight for longer remaining shelf life",
     ),
-    trust_weight: float = Query(
-        default=0.10,
+    trust_weight: Optional[float] = Query(
+        default=None,
         ge=0,
         le=1,
         description="WSM weight for batch verification",
     ),
+    current_user: Optional[TokenPayload] = Depends(get_optional_user),
 ):
     """
     Find Kendras stocking the requested medicine and rank them
@@ -131,7 +135,7 @@ async def medicine_nearby(
 
     The five supplied weights must add up to 1.0.
     """
-    weights = {
+    supplied = {
         "distance": distance_weight,
         "price": price_weight,
         "quantity": quantity_weight,
@@ -139,7 +143,28 @@ async def medicine_nearby(
         "trust": trust_weight,
     }
 
-    return await find_medicine_availability(
+    if all(value is None for value in supplied.values()):
+        # No weights in the request: use the logged-in user's saved
+        # preferences (set once in Profile), or the defaults.
+        weights = None
+        weights_source = "default"
+        if current_user is not None:
+            try:
+                saved = await get_user_ranking_preferences(user_id=current_user.sub)
+                weights = saved.preferences.model_dump()
+                weights_source = saved.source  # "saved" or "default"
+            except Exception:
+                weights, weights_source = None, "default"  # never block a search over preferences
+    elif any(value is None for value in supplied.values()):
+        raise HTTPException(
+            status_code=422,
+            detail="Send all five ranking weights, or none to use your saved preferences.",
+        )
+    else:
+        weights = supplied
+        weights_source = "custom"
+
+    results = await find_medicine_availability(
         pmbi_code=pmbi_code,
         lat=lat,
         lng=lng,
@@ -147,6 +172,9 @@ async def medicine_nearby(
         only_in_stock=only_in_stock,
         weights=weights,
     )
+    for item in results:
+        item["weights_source"] = weights_source
+    return results
 
 
 @router.get("/{kendra_id}")

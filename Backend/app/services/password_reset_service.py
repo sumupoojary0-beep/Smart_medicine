@@ -150,5 +150,8 @@ async def reset_password(email: str, otp: str, new_password: str) -> dict:
              "reset_otp_created_at": "", "reset_otp_tries": "",
          }},
     )
+    # a password change signs the account out everywhere
+    from app.services.refresh_token_service import revoke_all_for_user
+    await revoke_all_for_user(user["_id"])
     logger.info(f"Password reset completed for: {user['email']}")
     return {"message": "Password reset successful. You can sign in now."}

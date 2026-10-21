@@ -41,6 +41,7 @@ import { APP_NAME } from '../../constants/app'
 import Input from '../../components/forms/Input'
 import PasswordInput from '../../components/forms/PasswordInput'
 import Button from '../../components/ui/Button'
+import { DEMO_ENABLED } from '../../config/features'
 
 // ─── Admin demo credentials ───────────────────────────────────────────────────
 const ADMIN_DEMO = {
@@ -80,8 +81,7 @@ function AdminLoginPage() {
 
   function handleDemoAdmin() {
     clearError()
-    loginAsDemo('admin')
-    goToDashboard()
+    if (loginAsDemo('admin')) goToDashboard()
   }
 
   return (
@@ -154,10 +154,8 @@ function AdminLoginPage() {
             </Button>
           </form>
 
-          {/* ── Demo Administrator section ──────────────────────────── */}
-          {/* TODO: Remove this demo section before production deployment.
-                    Replace loginAsDemo() with real authService.login()
-                    when FastAPI backend is integrated. */}
+          {/* Demo Administrator section — only when VITE_ENABLE_DEMO=true */}
+          {DEMO_ENABLED && (
           <div className="mt-5 pt-5 border-t border-slate-100">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center mb-3">
               Demo Administrator
@@ -223,6 +221,7 @@ function AdminLoginPage() {
               demonstration purposes. Not for production use.
             </p>
           </div>
+          )}
         </div>
 
         {/* ── Back link ───────────────────────────────────────────────── */}

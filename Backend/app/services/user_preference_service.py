@@ -22,11 +22,11 @@ PREFERENCES_COLLECTION = "user_ranking_preferences"
 # =====================================================
 
 DEFAULT_RANKING_PREFERENCES = RankingPreferences(
-    distance=0.35,
+    distance=0.40,
     price=0.25,
-    quantity=0.20,
+    quantity=0.25,
     freshness=0.10,
-    trust=0.10,
+    trust=0.0,
 )
 
 

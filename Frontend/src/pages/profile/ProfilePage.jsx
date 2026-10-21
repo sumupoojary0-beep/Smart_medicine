@@ -23,6 +23,7 @@ import Toggle  from '../../components/forms/Toggle'
 import Button  from '../../components/ui/Button'
 import { useAuth } from '../../contexts/AuthContext'
 import { useState } from 'react'
+import PharmacyRankingPreferences from '../../components/profile/PharmacyRankingPreferences'
 
 const profileSchema = z.object({
   name:  z.string().min(2, 'Name must be at least 2 characters'),
@@ -91,6 +92,9 @@ function ProfilePage() {
           </div>
         </form>
       </div>
+
+      {/* Best-pharmacy ranking preferences (patients) */}
+      {role === 'patient' && <PharmacyRankingPreferences />}
 
       {/* Account settings */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">

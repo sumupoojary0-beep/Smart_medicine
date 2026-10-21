@@ -18,11 +18,11 @@ import axiosClient from '../config/axiosClient'
 // =====================================================
 
 export const DEFAULT_RANKING_WEIGHTS = {
-  distance: 0.35,
+  distance: 0.40,
   price: 0.25,
-  quantity: 0.20,
+  quantity: 0.25,
   freshness: 0.10,
-  trust: 0.10,
+  trust: 0,
 }
 
 
@@ -94,9 +94,9 @@ const kendraService = {
     lng,
     radiusKm = 5,
     onlyInStock = true,
-    weights = DEFAULT_RANKING_WEIGHTS,
+    weights = null, // null = server applies the user's saved preferences (set in Profile)
   ) => {
-    const validWeights = validateWeights(weights)
+    const validWeights = weights ? validateWeights(weights) : null
 
     return axiosClient.get(
       `/kendras/medicine/${encodeURIComponent(pmbiCode)}/nearby`,
@@ -107,20 +107,13 @@ const kendraService = {
           radius_km: radiusKm,
           only_in_stock: onlyInStock,
 
-          distance_weight:
-            validWeights.distance,
-
-          price_weight:
-            validWeights.price,
-
-          quantity_weight:
-            validWeights.quantity,
-
-          freshness_weight:
-            validWeights.freshness,
-
-          trust_weight:
-            validWeights.trust,
+          ...(validWeights && {
+            distance_weight: validWeights.distance,
+            price_weight: validWeights.price,
+            quantity_weight: validWeights.quantity,
+            freshness_weight: validWeights.freshness,
+            trust_weight: validWeights.trust,
+          }),
         },
       },
     )

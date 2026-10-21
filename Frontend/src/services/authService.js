@@ -40,7 +40,7 @@ const authService = {
 
   refreshToken: (data) => axiosClient.post('/auth/refresh-token', data),
 
-  logout: () => axiosClient.post('/auth/logout'),
+  logout: (data) => axiosClient.post('/auth/logout', data),
 }
 
 export default authService

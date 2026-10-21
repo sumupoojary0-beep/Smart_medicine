@@ -13,11 +13,11 @@ import axiosClient from '../config/axiosClient'
 // =====================================================
 
 export const DEFAULT_RANKING_PREFERENCES = {
-  distance: 0.35,
+  distance: 0.40,
   price: 0.25,
-  quantity: 0.20,
+  quantity: 0.25,
   freshness: 0.10,
-  trust: 0.10,
+  trust: 0,
 }
 
 

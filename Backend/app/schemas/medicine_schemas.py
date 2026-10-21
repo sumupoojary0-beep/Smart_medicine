@@ -41,6 +41,7 @@ class MedicineResponse(BaseModel):
     pack_size: str
     manufacturer: str
     is_active: bool
+    price_source: Optional[str] = None  # e.g. "NPPA ceiling price (...)"
 
 
 class MedicineSearchResponse(BaseModel):

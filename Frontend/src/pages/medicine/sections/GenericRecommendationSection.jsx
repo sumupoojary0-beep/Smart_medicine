@@ -134,12 +134,14 @@ function GenericRecommendationSection({
             PM Jan Aushadhi
           </Badge>
 
-          <Badge
-            variant="success"
-            size="md"
-          >
-            {savingsPct}% Cheaper
-          </Badge>
+          {savingsPct > 0 && (
+            <Badge
+              variant="success"
+              size="md"
+            >
+              {savingsPct}% Cheaper
+            </Badge>
+          )}
         </div>
 
 
@@ -286,19 +288,21 @@ function GenericRecommendationSection({
                 Brand: ₹{brandPrice}
               </p>
 
-              <div
-                className="mt-2 flex items-center
-                           justify-center gap-1.5"
-              >
-                <Badge
-                  variant="success"
-                  size="sm"
+              {savingsPct > 0 && (
+                <div
+                  className="mt-2 flex items-center
+                             justify-center gap-1.5"
                 >
-                  Save ₹{savings}
-                  {' '}
-                  ({savingsPct}% off)
-                </Badge>
-              </div>
+                  <Badge
+                    variant="success"
+                    size="sm"
+                  >
+                    Save ₹{savings}
+                    {' '}
+                    ({savingsPct}% off)
+                  </Badge>
+                </div>
+              )}
             </div>
 
 

@@ -160,8 +160,11 @@ function MedicineDetailsPage() {
     }
 
     return {
-      brandName:
-        `${medicineResponse.brand_name} (Branded)`,
+      brandName: medicineResponse.price_source
+        ? 'Maximum brand price allowed (NPPA)'
+        : `${medicineResponse.brand_name} (Branded)`,
+
+      priceSource: medicineResponse.price_source || '',
 
       brandPrice:
         Number(

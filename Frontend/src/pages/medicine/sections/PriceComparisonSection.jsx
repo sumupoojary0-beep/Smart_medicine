@@ -28,11 +28,40 @@ function PriceComparisonSection({ prices = {} }) {
     brandPrice   = 120,
     genericName  = 'Jan Aushadhi Generic',
     genericPrice = 38,
+    priceSource  = '',
   } = prices
 
   const savings        = Math.round((brandPrice - genericPrice) * 100) / 100
   const savingsPct     = Math.round((savings / brandPrice) * 100)
   const genericBarPct  = Math.round((genericPrice / brandPrice) * 100)
+
+  // No verified branded price for this medicine (brand price is missing or
+  // equal to the Jan Aushadhi price): show the real price only, never a fake "0% saving".
+  const hasComparison = brandPrice > genericPrice && genericPrice > 0
+  if (!hasComparison) {
+    return (
+      <section aria-labelledby="price-comparison-heading">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <HiOutlineCurrencyRupee size={18} className="text-primary-600" aria-hidden="true" />
+            <h2 id="price-comparison-heading" className="text-base font-bold text-slate-900">
+              Price
+            </h2>
+          </div>
+          <div className="flex flex-col gap-1 p-4 rounded-xl bg-primary-50 border border-primary-200 text-center">
+            <p className="text-[11px] font-semibold text-primary-500 uppercase tracking-wider">
+              Jan Aushadhi Price
+            </p>
+            <p className="text-3xl font-extrabold text-primary-700">₹{genericPrice}</p>
+            <p className="text-xs text-primary-400 truncate">{genericName}</p>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-4 text-center">
+            Official Jan Aushadhi (PMBI) price. A verified branded price for comparison is not available for this medicine yet.
+          </p>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section aria-labelledby="price-comparison-heading">
@@ -73,8 +102,7 @@ function PriceComparisonSection({ prices = {} }) {
             <p className="text-3xl font-extrabold text-success-700">₹{savings.toFixed(2)}</p>
             <Badge variant="success" size="sm">{savingsPct}% off</Badge>
             <p className="text-[10px] text-success-500 mt-1">
-              {/* TODO: Actual savings from API */}
-              Estimated savings
+              Compared with branded price
             </p>
           </div>
 
@@ -102,7 +130,9 @@ function PriceComparisonSection({ prices = {} }) {
         {/* Footer note */}
         <p className="text-[10px] text-slate-400 mt-4 text-center">
           {/* TODO: prices from GET /api/v1/medicines/:id/price-comparison */}
-          Prices shown are indicative. Actual prices may vary by pharmacy and location.
+          {priceSource
+            ? `Brand price = ${priceSource}: the most any brand may charge for this medicine. Actual brand prices may be lower.`
+            : 'Prices shown are indicative. Actual prices may vary by pharmacy and location.'}
         </p>
       </div>
     </section>

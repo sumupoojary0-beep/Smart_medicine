@@ -42,6 +42,7 @@ import Input from '../../components/forms/Input'
 import PasswordInput from '../../components/forms/PasswordInput'
 import Checkbox from '../../components/forms/Checkbox'
 import Button from '../../components/ui/Button'
+import { DEMO_ENABLED } from '../../config/features'
 
 // ─── Demo explore cards (public login page — no Admin) ────────────────────────
 /**
@@ -198,7 +199,7 @@ function LoginPage() {
   function handleDemoLogin(role) {
     clearError()
     const user = loginAsDemo(role)
-    roleRedirect(user.role)
+    if (user) roleRedirect(user.role)
   }
 
   return (
@@ -275,7 +276,7 @@ function LoginPage() {
       </p>
 
       {/* ── Explore Demo section ──────────────────────────────────────── */}
-      <ExploreDemoSection onDemo={handleDemoLogin} />
+      {DEMO_ENABLED && <ExploreDemoSection onDemo={handleDemoLogin} />}
     </div>
   )
 }

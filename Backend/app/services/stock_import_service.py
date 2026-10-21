@@ -15,6 +15,7 @@ confirm_import()  re-validates everything and then writes in one step.
 """
 
 import asyncio
+import random
 import io
 import os
 import re
@@ -23,6 +24,8 @@ from datetime import date, datetime, timezone
 
 import httpx
 from fastapi import HTTPException, UploadFile, status
+
+from app.utils.file_checks import verify_upload
 
 from app.core.constants import KENDRAS_COLLECTION, MEDICINES_COLLECTION
 from app.database.connection import get_database
@@ -33,6 +36,8 @@ from app.services.kendra_service import (
     _to_object_id,
     _verify_kendra_ownership,
     compute_stock_status,
+    STOCK_WRITE_RETRIES,
+    save_stock_if_unchanged,
 )
 from app.services.notification_service import notify_stock_alert_subscribers
 from app.utils.bill_matcher import CatalogueIndex, match_row
@@ -270,7 +275,7 @@ async def preview_import(kendra_id: str, upload: UploadFile, current_user) -> di
     _to_object_id(kendra_id)
     await _verify_kendra_ownership(kendra_id, current_user)
 
-    data = await upload.read()
+    data = await upload.read(MAX_UPLOAD_BYTES + 1)  # never load more than the limit + 1 byte
     if not data:
         raise HTTPException(status_code=400, detail="The uploaded file is empty.")
     if len(data) > MAX_UPLOAD_BYTES:
@@ -279,6 +284,7 @@ async def preview_import(kendra_id: str, upload: UploadFile, current_user) -> di
     filename = upload.filename or "bill"
     content_type = upload.content_type or ""
     kind = _file_kind(filename, content_type)
+    verify_upload(kind, data)  # check the real file content, not just its name
 
     started = time.perf_counter()
     extracted = await _extract(kind, data, filename, content_type)
@@ -408,58 +414,71 @@ async def confirm_import(kendra_id: str, data: StockImportConfirmRequest, curren
         )
 
     # ---- merge into the stock array
-    stock = kendra.get("stock", [])
-    previous_qty = {item["pmbi_code"]: item["total_qty"] for item in stock}
-    imported_at = datetime.now(timezone.utc)
-    supplier_default = (data.supplier_name or "").strip()
-    new_batches = merged = units = 0
+    for _attempt in range(STOCK_WRITE_RETRIES):
+        if _attempt:
+            await asyncio.sleep(random.uniform(0, 0.03 * _attempt))  # tiny random pause so retries do not collide again
+            # another request changed this Kendra's stock meanwhile: reload and redo the calculation
+            kendra = await db[KENDRAS_COLLECTION].find_one({"_id": object_id})
+            if not kendra:
+                raise HTTPException(status_code=404, detail="Kendra not found.")
+        stock = kendra.get("stock", [])
+        previous_qty = {item["pmbi_code"]: item["total_qty"] for item in stock}
+        imported_at = datetime.now(timezone.utc)
+        supplier_default = (data.supplier_name or "").strip()
+        new_batches = merged = units = 0
 
-    for row in data.rows:
-        manufacturer = (row.manufacturer or supplier_default or "").strip()
-        if len(manufacturer) < 2:
-            manufacturer = "Not stated"
-        expiry_dt = datetime(row.expiry_date.year, row.expiry_date.month, row.expiry_date.day)
+        for row in data.rows:
+            manufacturer = (row.manufacturer or supplier_default or "").strip()
+            if len(manufacturer) < 2:
+                manufacturer = "Not stated"
+            expiry_dt = datetime(row.expiry_date.year, row.expiry_date.month, row.expiry_date.day)
 
-        item = next((s for s in stock if s["pmbi_code"] == row.pmbi_code), None)
-        if item is None:
-            item = {"pmbi_code": row.pmbi_code, "total_qty": 0, "status": "out_of_stock", "batches": []}
-            stock.append(item)
+            item = next((s for s in stock if s["pmbi_code"] == row.pmbi_code), None)
+            if item is None:
+                item = {"pmbi_code": row.pmbi_code, "total_qty": 0, "status": "out_of_stock", "batches": []}
+                stock.append(item)
 
-        existing = next(
-            (b for b in item["batches"]
-             if _batch_key(b.get("batch_number")) == _batch_key(row.batch_number)
-             and _batch_expiry_date(b) == row.expiry_date),
-            None,
+            existing = next(
+                (b for b in item["batches"]
+                 if _batch_key(b.get("batch_number")) == _batch_key(row.batch_number)
+                 and _batch_expiry_date(b) == row.expiry_date),
+                None,
+            )
+            if existing:
+                existing["quantity"] = int(existing.get("quantity", 0)) + row.quantity
+                if row.selling_price is not None:
+                    existing["selling_price"] = row.selling_price
+                merged += 1
+            else:
+                batch = {
+                    "batch_number": row.batch_number,
+                    "expiry_date": expiry_dt,
+                    "quantity": row.quantity,
+                    "manufacturer": manufacturer,
+                    "verification_status": data.verification_status,
+                }
+                if row.selling_price is not None:
+                    batch["selling_price"] = row.selling_price
+                if row.purchase_rate is not None:
+                    batch["purchase_rate"] = row.purchase_rate
+                if row.mrp is not None:
+                    batch["mrp_on_bill"] = row.mrp
+                if data.invoice_no:
+                    batch["supplier_invoice_no"] = data.invoice_no
+                item["batches"].append(batch)
+                new_batches += 1
+
+            item["total_qty"] = sum(int(b.get("quantity", 0)) for b in item["batches"])
+            item["status"] = compute_stock_status(item["total_qty"])
+            units += row.quantity
+
+        if await save_stock_if_unchanged(db, object_id, stock, kendra.get("stock_version")):
+            break
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The stock was being changed by someone else. Nothing was saved - please try again.",
         )
-        if existing:
-            existing["quantity"] = int(existing.get("quantity", 0)) + row.quantity
-            if row.selling_price is not None:
-                existing["selling_price"] = row.selling_price
-            merged += 1
-        else:
-            batch = {
-                "batch_number": row.batch_number,
-                "expiry_date": expiry_dt,
-                "quantity": row.quantity,
-                "manufacturer": manufacturer,
-                "verification_status": data.verification_status,
-            }
-            if row.selling_price is not None:
-                batch["selling_price"] = row.selling_price
-            if row.purchase_rate is not None:
-                batch["purchase_rate"] = row.purchase_rate
-            if row.mrp is not None:
-                batch["mrp_on_bill"] = row.mrp
-            if data.invoice_no:
-                batch["supplier_invoice_no"] = data.invoice_no
-            item["batches"].append(batch)
-            new_batches += 1
-
-        item["total_qty"] = sum(int(b.get("quantity", 0)) for b in item["batches"])
-        item["status"] = compute_stock_status(item["total_qty"])
-        units += row.quantity
-
-    await db[KENDRAS_COLLECTION].update_one({"_id": object_id}, {"$set": {"stock": stock}})
 
     # ---- audit trail + the import record (also what blocks a second import)
     user_email = getattr(current_user, "sub", None)

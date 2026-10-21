@@ -13,6 +13,7 @@ from app.utils.email_otp import (
     send_registration_otp,
     verify_otp_hash,
 )
+from app.services.refresh_token_service import issue_refresh_token
 from app.utils.jwt_helper import create_access_token
 from app.utils.logger import logger
 from app.utils.password import hash_password, verify_password
@@ -313,6 +314,7 @@ async def login_user(user_data: LoginRequest) -> dict:
 
     return {
         "access_token": access_token,
+        "refresh_token": await issue_refresh_token(user),
         "token_type": "bearer",
     }
 

@@ -156,6 +156,9 @@ async def set_user_status(user_id: str, new_status: str, actor_email: str) -> di
     db = get_database()
     user = await _target(db, user_id, actor_email)
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"status": new_status}})
+    if new_status != "ACTIVE":
+        from app.services.refresh_token_service import revoke_all_for_user
+        await revoke_all_for_user(user["_id"])
     return {"message": ("Account re-activated." if new_status == "ACTIVE" else
                         "Account suspended. They can no longer sign in."), "status": new_status}
 

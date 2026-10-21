@@ -37,8 +37,28 @@ bearer_scheme = HTTPBearer()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
 ) -> TokenPayload:
-    """Get the current authenticated user from the JWT."""
-    return verify_access_token(credentials.credentials)
+    """Get the current authenticated user from the JWT, re-checked against the database.
+
+    A valid token is not enough: the account must still exist and be ACTIVE,
+    and the role is taken from the database, so suspending a user or changing
+    their role takes effect immediately.
+    """
+    payload = verify_access_token(credentials.credentials)
+
+    from app.database.connection import get_database  # local import avoids a cycle
+
+    user = await get_database().users.find_one({"email": payload.sub})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token.",
+        )
+    if user.get("status") != "ACTIVE":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is inactive.",
+        )
+    return TokenPayload(sub=payload.sub, role=str(getattr(user["role"], "value", user["role"])), exp=payload.exp)
     
 def require_role(
     allowed_roles: list[str]
@@ -55,3 +75,18 @@ def require_role(
         return current_user
 
     return role_checker
+
+
+optional_bearer_scheme = HTTPBearer(auto_error=False)
+
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+) -> TokenPayload | None:
+    """Like get_current_user, but returns None for anonymous or invalid callers."""
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(credentials)
+    except HTTPException:
+        return None

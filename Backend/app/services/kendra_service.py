@@ -1,3 +1,5 @@
+import asyncio
+import random
 import re
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
@@ -123,11 +125,11 @@ async def find_medicine_availability(
     with the Weighted Sum Model (WSM).
     """
     weights = weights or {
-        "distance": 0.35,
+        "distance": 0.40,
         "price": 0.25,
-        "quantity": 0.20,
+        "quantity": 0.25,
         "freshness": 0.10,
-        "trust": 0.10,
+        "trust": 0.0,  # all stock is verified, so this factor is not used
     }
 
     if abs(sum(weights.values()) - 1.0) > 0.001:
@@ -283,6 +285,24 @@ async def find_medicine_availability(
     return results
 
 
+STOCK_WRITE_RETRIES = 8
+
+
+async def save_stock_if_unchanged(db, object_id, stock: list, loaded_version) -> bool:
+    """
+    Save the stock array only if nobody else changed it since we read it
+    (optimistic locking via a `stock_version` counter on the Kendra document).
+    Returns False when another request got there first - the caller reloads and retries.
+    This is what stops two simultaneous bills from overselling or overwriting each other.
+    """
+    version_filter = loaded_version if loaded_version is not None else {"$exists": False}
+    result = await db[KENDRAS_COLLECTION].update_one(
+        {"_id": object_id, "stock_version": version_filter},
+        {"$set": {"stock": stock}, "$inc": {"stock_version": 1}},
+    )
+    return result.matched_count == 1
+
+
 def compute_stock_status(quantity: int) -> str:
     """SRS-defined stock status transitions."""
     if quantity <= 0:
@@ -310,39 +330,49 @@ async def restock_medicine(kendra_id: str, data: RestockRequest, current_user=No
             detail="Kendra not found.",
         )
 
-    stock = kendra.get("stock", [])
-    new_batch = {
-        "batch_number": data.batch_number,
-        "expiry_date": data.expiry_date,
-        "quantity": data.quantity,
-        "manufacturer": data.manufacturer,
-        "verification_status": data.verification_status,
-    }
-    if data.selling_price is not None:
-        new_batch["selling_price"] = data.selling_price
+    for _attempt in range(STOCK_WRITE_RETRIES):
+        if _attempt:
+            await asyncio.sleep(random.uniform(0, 0.03 * _attempt))  # tiny random pause so retries do not collide again
+            # another request changed this Kendra's stock meanwhile: reload and redo the calculation
+            kendra = await db[KENDRAS_COLLECTION].find_one({"_id": object_id})
+            if not kendra:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kendra not found.")
+        stock = kendra.get("stock", [])
+        new_batch = {
+            "batch_number": data.batch_number,
+            "expiry_date": data.expiry_date,
+            "quantity": data.quantity,
+            "manufacturer": data.manufacturer,
+            "verification_status": data.verification_status,
+        }
+        if data.selling_price is not None:
+            new_batch["selling_price"] = data.selling_price
 
-    stock_item = next((s for s in stock if s["pmbi_code"] == data.pmbi_code), None)
-    previous_qty = stock_item["total_qty"] if stock_item else 0
+        stock_item = next((s for s in stock if s["pmbi_code"] == data.pmbi_code), None)
+        previous_qty = stock_item["total_qty"] if stock_item else 0
 
-    if stock_item is None:
-        # First time this medicine is stocked at this Kendra
-        stock.append({
-            "pmbi_code": data.pmbi_code,
-            "total_qty": data.quantity,
-            "status": compute_stock_status(data.quantity),
-            "batches": [new_batch],
-        })
-        new_qty = data.quantity
+        if stock_item is None:
+            # First time this medicine is stocked at this Kendra
+            stock.append({
+                "pmbi_code": data.pmbi_code,
+                "total_qty": data.quantity,
+                "status": compute_stock_status(data.quantity),
+                "batches": [new_batch],
+            })
+            new_qty = data.quantity
+        else:
+            stock_item["batches"].append(new_batch)
+            stock_item["total_qty"] = sum(b["quantity"] for b in stock_item["batches"])
+            stock_item["status"] = compute_stock_status(stock_item["total_qty"])
+            new_qty = stock_item["total_qty"]
+
+        if await save_stock_if_unchanged(db, object_id, stock, kendra.get("stock_version")):
+            break
     else:
-        stock_item["batches"].append(new_batch)
-        stock_item["total_qty"] = sum(b["quantity"] for b in stock_item["batches"])
-        stock_item["status"] = compute_stock_status(stock_item["total_qty"])
-        new_qty = stock_item["total_qty"]
-
-    await db[KENDRAS_COLLECTION].update_one(
-        {"_id": object_id},
-        {"$set": {"stock": stock}},
-    )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The stock was being changed by someone else. Nothing was saved - please try again.",
+        )
 
     # SRS "Customer Stock Alert": if this medicine was out of stock and
     # is now available, notify anyone who subscribed via "Notify Me".
@@ -504,59 +534,69 @@ async def generate_bill(kendra_id: str, data: BillRequest, current_user=None) ->
             detail="Kendra not found.",
         )
 
-    stock = kendra.get("stock", [])
-    line_items = []
-    subtotal = Decimal("0")
+    for _attempt in range(STOCK_WRITE_RETRIES):
+        if _attempt:
+            await asyncio.sleep(random.uniform(0, 0.03 * _attempt))  # tiny random pause so retries do not collide again
+            # another request changed this Kendra's stock meanwhile: reload and redo the calculation
+            kendra = await db[KENDRAS_COLLECTION].find_one({"_id": object_id})
+            if not kendra:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Kendra not found.")
+        stock = kendra.get("stock", [])
+        line_items = []
+        subtotal = Decimal("0")
 
-    for item in data.items:
-        stock_item = next((s for s in stock if s["pmbi_code"] == item.pmbi_code), None)
-        if stock_item is None or not stock_item.get("batches"):
+        for item in data.items:
+            stock_item = next((s for s in stock if s["pmbi_code"] == item.pmbi_code), None)
+            if stock_item is None or not stock_item.get("batches"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Medicine '{item.pmbi_code}' is not stocked at this Kendra.",
+                )
+
+            medicine = await db[MEDICINES_COLLECTION].find_one({"pmbi_code": item.pmbi_code})
+            if not medicine:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Medicine '{item.pmbi_code}' not found in catalog.",
+                )
+
+            remaining_batches, deduction_log = _deduct_fifo(stock_item["batches"], item.quantity)
+
+            stock_item["batches"] = remaining_batches
+            stock_item["total_qty"] = sum(b["quantity"] for b in remaining_batches)
+            stock_item["status"] = compute_stock_status(stock_item["total_qty"])
+
+            unit_price = _d(medicine["jan_aushadhi_mrp"])
+            line_total = (unit_price * item.quantity).quantize(CENT, rounding=ROUND_HALF_UP)
+            subtotal += line_total
+
+            line_items.append({
+                "pmbi_code": item.pmbi_code,
+                "medicine_name": medicine["brand_name"],
+                "item_name": medicine.get("generic_name") or medicine["brand_name"],
+                "pack_size": medicine.get("pack_size"),
+                "quantity": item.quantity,
+                "unit_price": float(unit_price),
+                "line_total": float(line_total),
+                "batches_used": deduction_log,
+            })
+
+        discount = _d(data.discount).quantize(CENT, rounding=ROUND_HALF_UP)
+        if discount > subtotal:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Medicine '{item.pmbi_code}' is not stocked at this Kendra.",
+                detail=f"Discount (₹{discount}) cannot exceed the bill total (₹{subtotal}).",
             )
+        totals = compute_invoice_totals(subtotal, discount, data.gst_percentage)
 
-        medicine = await db[MEDICINES_COLLECTION].find_one({"pmbi_code": item.pmbi_code})
-        if not medicine:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Medicine '{item.pmbi_code}' not found in catalog.",
-            )
-
-        remaining_batches, deduction_log = _deduct_fifo(stock_item["batches"], item.quantity)
-
-        stock_item["batches"] = remaining_batches
-        stock_item["total_qty"] = sum(b["quantity"] for b in remaining_batches)
-        stock_item["status"] = compute_stock_status(stock_item["total_qty"])
-
-        unit_price = _d(medicine["jan_aushadhi_mrp"])
-        line_total = (unit_price * item.quantity).quantize(CENT, rounding=ROUND_HALF_UP)
-        subtotal += line_total
-
-        line_items.append({
-            "pmbi_code": item.pmbi_code,
-            "medicine_name": medicine["brand_name"],
-            "item_name": medicine.get("generic_name") or medicine["brand_name"],
-            "pack_size": medicine.get("pack_size"),
-            "quantity": item.quantity,
-            "unit_price": float(unit_price),
-            "line_total": float(line_total),
-            "batches_used": deduction_log,
-        })
-
-    discount = _d(data.discount).quantize(CENT, rounding=ROUND_HALF_UP)
-    if discount > subtotal:
+        # Persist updated stock (FIFO deduction applied)
+        if await save_stock_if_unchanged(db, object_id, stock, kendra.get("stock_version")):
+            break
+    else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Discount (₹{discount}) cannot exceed the bill total (₹{subtotal}).",
+            status_code=status.HTTP_409_CONFLICT,
+            detail="The stock was being changed by someone else. Nothing was saved - please try again.",
         )
-    totals = compute_invoice_totals(subtotal, discount, data.gst_percentage)
-
-    # Persist updated stock (FIFO deduction applied)
-    await db[KENDRAS_COLLECTION].update_one(
-        {"_id": object_id},
-        {"$set": {"stock": stock}},
-    )
 
     billed_at = datetime.now(timezone.utc)
     bill_number = await _next_bill_number(db, str(object_id))

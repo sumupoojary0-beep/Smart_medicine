@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import Field
 from app.models.base_model import BaseDocument
 
@@ -19,3 +20,4 @@ class MedicineModel(BaseDocument):
     pack_size: str = Field(..., max_length=50)
     manufacturer: str = Field(..., min_length=2, max_length=150)
     is_active: bool = Field(default=True)
+    price_source: Optional[str] = None

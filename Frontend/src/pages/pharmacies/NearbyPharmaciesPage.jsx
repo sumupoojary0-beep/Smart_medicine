@@ -10,7 +10,7 @@
  */
 
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 
 import PharmacySearchSummary from './sections/PharmacySearchSummary'
@@ -21,18 +21,23 @@ import ReservationSection from './sections/ReservationSection'
 import NavigationPreview from './sections/NavigationPreview'
 import PharmacyWorkflowTimeline from './sections/PharmacyWorkflowTimeline'
 import PharmacyTips from './sections/PharmacyTips'
-import RankingPreferencesPanel from './sections/RankingPreferencesPanel'
 
 import HealthcareDisclaimer from '../medicine/sections/HealthcareDisclaimer'
 import Divider from '../../components/ui/Divider'
 import { useGeolocation } from '../../hooks/useGeolocation'
 
-import kendraService, {
-  DEFAULT_RANKING_WEIGHTS,
-} from '../../services/kendraService'
+import kendraService from '../../services/kendraService'
+import { ROUTES } from '../../constants/routes'
 
 
 const DEFAULT_RADIUS_KM = 50
+
+const RANKING_LABELS = {
+  distance: 'Distance',
+  price: 'Price',
+  quantity: 'Stock',
+  freshness: 'Shelf life',
+}
 
 
 // =====================================================
@@ -42,11 +47,6 @@ const DEFAULT_RADIUS_KM = 50
 function NearbyPharmaciesPage() {
   const [selectedId, setSelectedId] =
     useState(null)
-
-  const [rankingWeights, setRankingWeights] =
-    useState({
-      ...DEFAULT_RANKING_WEIGHTS,
-    })
 
   const [searchParams] = useSearchParams()
 
@@ -84,40 +84,6 @@ function NearbyPharmaciesPage() {
 
 
   // =====================================================
-  // Apply ranking preferences
-  // =====================================================
-
-  function handleApplyRankingPreferences(
-    updatedWeights,
-  ) {
-    setRankingWeights({
-      ...updatedWeights,
-    })
-
-    /*
-     * Clear the selected Kendra because its position may
-     * change after applying new WSM weights.
-     */
-    setSelectedId(null)
-  }
-
-
-  // =====================================================
-  // Reset ranking preferences
-  // =====================================================
-
-  function handleResetRankingPreferences(
-    resetWeights,
-  ) {
-    setRankingWeights({
-      ...resetWeights,
-    })
-
-    setSelectedId(null)
-  }
-
-
-  // =====================================================
   // Load nearby or ranked Kendras
   // =====================================================
 
@@ -131,11 +97,6 @@ function NearbyPharmaciesPage() {
       location?.lat,
       location?.lng,
       DEFAULT_RADIUS_KM,
-      rankingWeights.distance,
-      rankingWeights.price,
-      rankingWeights.quantity,
-      rankingWeights.freshness,
-      rankingWeights.trust,
     ],
 
     queryFn: async () => {
@@ -147,8 +108,7 @@ function NearbyPharmaciesPage() {
             location.lng,
             DEFAULT_RADIUS_KM,
             true,
-            rankingWeights,
-          )
+          )  // no weights sent: the server ranks with this user's saved preferences
 
         return response.data
       }
@@ -168,6 +128,14 @@ function NearbyPharmaciesPage() {
       && location?.lng,
     ),
   })
+
+
+  // Which preferences the server used for this ranking
+  const firstRanked = Array.isArray(kendrasQuery.data) ? kendrasQuery.data[0] : null
+  const rankingInfo = {
+    source: firstRanked?.weights_source ?? 'default',
+    weights: firstRanked?.weights_used ?? null,
+  }
 
 
   // =====================================================
@@ -328,49 +296,36 @@ function NearbyPharmaciesPage() {
       />
 
 
-      {/* WSM information */}
+      {/* How the Kendras were ranked */}
 
       {pmbiCode && (
         <div
-          className="rounded-xl border
-                     border-primary-200
-                     bg-primary-50 px-4 py-3"
+          className="rounded-xl border border-primary-200 bg-primary-50 px-4 py-3"
         >
-          <p
-            className="text-sm font-semibold
-                       text-primary-800"
-          >
-            Smart Kendra ranking applied
+          <p className="text-sm font-semibold text-primary-800">
+            {rankingInfo.source === 'saved'
+              ? 'Ranked using your saved preferences'
+              : 'Ranked using the default (Balanced) preferences'}
           </p>
 
-          <p
-            className="mt-1 text-xs
-                       text-primary-700"
+          {rankingInfo.weights && (
+            <p className="mt-1 text-xs text-primary-700">
+              {Object.entries(RANKING_LABELS)
+                .map(([key, label]) => `${label} ${Math.round((rankingInfo.weights[key] ?? 0) * 100)}%`)
+                .join(' · ')}
+            </p>
+          )}
+
+          <Link
+            to={ROUTES.USER.PROFILE}
+            className="mt-1 inline-block text-xs font-semibold text-primary-700 underline hover:text-primary-900"
           >
-            Results are ranked using distance,
-            price, stock quantity, medicine
-            freshness and batch trust.
-          </p>
+            {rankingInfo.source === 'saved' ? 'Change my preferences' : 'Set my preferences'}
+          </Link>
         </div>
       )}
 
 
-      {/* Ranking preferences */}
-
-      {pmbiCode && (
-        <RankingPreferencesPanel
-          weights={rankingWeights}
-          defaultWeights={
-            DEFAULT_RANKING_WEIGHTS
-          }
-          onApply={
-            handleApplyRankingPreferences
-          }
-          onReset={
-            handleResetRankingPreferences
-          }
-        />
-      )}
 
 
       {/* Fallback location warning */}

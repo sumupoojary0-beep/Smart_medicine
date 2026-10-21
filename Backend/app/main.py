@@ -17,6 +17,7 @@ from app.routers.report_router import router as report_router
 from app.routers.pharmacy_registration_router import router as pharmacy_registration_router
 from app.routers.admin_kendra_router import router as admin_kendra_router
 from app.routers.admin_manage_router import router as admin_manage_router
+from app.routers.user_router import router as user_router
 
 
 @asynccontextmanager
@@ -69,6 +70,7 @@ app.include_router(admin_router)
 app.include_router(report_router)
 app.include_router(pharmacy_registration_router)
 app.include_router(admin_manage_router)
+app.include_router(user_router)
 
 @app.get("/")
 async def root():

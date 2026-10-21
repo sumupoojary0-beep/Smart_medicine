@@ -1,54 +1,119 @@
 from fastapi import APIRouter, Depends, Query
 
-from app.schemas.token_schema import TokenPayload
-from app.utils.jwt_helper import require_role
-from app.utils.constants import UserRole, DEFAULT_PAGE, DEFAULT_PAGE_SIZE
-from app.services.admin_service import (
-    get_inventory_overview,
-    get_expiry_overview,
-    get_demand_analytics,
-    list_all_bills,
+from app.schemas.auth_schemas import (
+    ForgotPasswordRequest,
+    LoginRequest,
+    RegisterRequest,
+    ResendOTPRequest,
+    ResetPasswordRequest,
+    TokenResponse,
+    VerifyOTPRequest,
 )
+from app.schemas.token_schema import TokenPayload
+from app.services.auth_service import (
+    get_current_user_profile,
+    login_user,
+    register_user,
+    resend_registration_otp,
+    verify_registration_otp,
+)
+from app.services.password_reset_service import (
+    check_reset_otp,
+    forgot_password,
+    reset_password,
+)
+from app.utils.jwt_helper import get_current_user
+from app.utils.rate_limit import check_limit, ip_limit
+
 
 router = APIRouter(
-    prefix="/api/v1/admin",
-    tags=["Admin"],
+    prefix="/api/v1/auth",
+    tags=["Authentication"],
 )
 
 
-@router.get("/inventory")
-async def inventory_overview(
-    current_user: TokenPayload = Depends(require_role([UserRole.ADMIN])),
+@router.get("/health")
+async def authentication_health():
+    """Check whether the authentication module is running."""
+
+    return {
+        "success": True,
+        "module": "Authentication",
+        "message": "Authentication Router is Working Successfully",
+    }
+
+
+@router.post("/register", dependencies=[Depends(ip_limit("register", 10, 3600))])
+async def register(user_data: RegisterRequest):
+    """Register a new user and send an email OTP."""
+
+    check_limit("register-email", user_data.email, 5, 3600)
+
+    return await register_user(user_data)
+
+
+@router.post("/verify-otp", dependencies=[Depends(ip_limit("verify-otp", 30, 600))])
+async def verify_otp(data: VerifyOTPRequest, flow: str = Query(default="register")):
+    """Verify the six-digit OTP (flow=register: sign-up code, flow=reset: password-reset code)."""
+
+    check_limit("verify-otp-email", data.email, 10, 600)
+
+    if flow == "reset":
+        return await check_reset_otp(email=data.email, otp=data.otp)
+
+    return await verify_registration_otp(
+        email=data.email,
+        otp=data.otp,
+    )
+
+
+@router.post("/resend-otp", dependencies=[Depends(ip_limit("resend-otp", 10, 900))])
+async def resend_otp(data: ResendOTPRequest, flow: str = Query(default="register")):
+    """Generate and email a new OTP."""
+
+    check_limit("otp-email", data.email, 5, 900)
+
+    if flow == "reset":
+        return await forgot_password(data.email)
+
+    return await resend_registration_otp(
+        email=data.email,
+    )
+
+
+@router.post("/forgot-password", dependencies=[Depends(ip_limit("forgot-password", 10, 900))])
+async def forgot_password_route(data: ForgotPasswordRequest):
+    """Email a password-reset code (same answer whether or not the account exists)."""
+
+    check_limit("otp-email", data.email, 5, 900)
+
+    return await forgot_password(data.email)
+
+
+@router.post("/reset-password", dependencies=[Depends(ip_limit("reset-password", 20, 900))])
+async def reset_password_route(data: ResetPasswordRequest):
+    """Check the reset code and save the new password."""
+
+    check_limit("reset-email", data.email, 10, 900)
+
+    return await reset_password(data.email, data.otp, data.new_password)
+
+
+@router.post("/login", response_model=TokenResponse, dependencies=[Depends(ip_limit("login", 20, 60))])
+async def login(credentials: LoginRequest):
+    """Authenticate a verified user."""
+
+    check_limit("login-email", credentials.email, 10, 900)
+
+    return await login_user(credentials)
+
+
+@router.get("/me")
+async def get_me(
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    """System-wide stock snapshot across every Kendra — totals, and
-    low/out-of-stock line items. Admin only."""
-    return await get_inventory_overview()
+    """Return the currently authenticated user's profile."""
 
-
-@router.get("/expiry")
-async def expiry_overview(
-    current_user: TokenPayload = Depends(require_role([UserRole.ADMIN])),
-):
-    """System-wide batch expiry snapshot across every Kendra, bucketed
-    into expired / red (<=30 days) / amber (<=60 days). Admin only."""
-    return await get_expiry_overview()
-
-
-@router.get("/analytics")
-async def demand_analytics(
-    trend_days: int = Query(default=14, ge=1, le=90),
-    current_user: TokenPayload = Depends(require_role([UserRole.ADMIN])),
-):
-    """System-wide demand analytics from real bill data — revenue
-    summary, top-selling medicines, daily sales trend. Admin only."""
-    return await get_demand_analytics(trend_days=trend_days)
-
-
-@router.get("/bills")
-async def bills(
-    page: int = Query(default=DEFAULT_PAGE, ge=1),
-    page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1),
-    current_user: TokenPayload = Depends(require_role([UserRole.ADMIN])),
-):
-    """System-wide sales history across every Kendra, most recent first. Admin only."""
-    return await list_all_bills(page=page, page_size=page_size)
+    return await get_current_user_profile(
+        current_user.sub,
+    )

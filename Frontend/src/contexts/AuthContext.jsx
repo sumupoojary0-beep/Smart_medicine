@@ -29,11 +29,22 @@ import { createContext, useContext, useState, useCallback } from 'react'
 import { storage } from '../utils/storage'
 import { STORAGE_KEYS } from '../constants/app'
 import authService from '../services/authService'
+import { DEMO_ENABLED } from '../config/features'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser]   = useState(() => storage.get(STORAGE_KEYS.USER))
+  const [currentUser, setCurrentUser]   = useState(() => {
+    const saved = storage.get(STORAGE_KEYS.USER)
+    // A leftover demo session must not survive when demo mode is switched off.
+    if (saved?.isDemo && !DEMO_ENABLED) {
+      storage.remove(STORAGE_KEYS.USER)
+      storage.remove(STORAGE_KEYS.ACCESS_TOKEN)
+      storage.remove(STORAGE_KEYS.REFRESH_TOKEN)
+      return null
+    }
+    return saved
+  })
   const [isLoading,   setIsLoading]     = useState(false)
   const [authError,   setAuthError]     = useState(null)
 
@@ -95,7 +106,7 @@ export function AuthProvider({ children }) {
         assignedKendraId: profile.assigned_kendra_id ?? null,
       }
 
-      storeSession(user, data.access_token, null)
+      storeSession(user, data.access_token, data.refresh_token ?? null)
       return user
     } catch (err) {
       // Clean up the token if the profile fetch failed after a successful login
@@ -124,6 +135,7 @@ export function AuthProvider({ children }) {
    * @returns {object} user — the demo user object
    */
   const loginAsDemo = useCallback((role) => {
+    if (!DEMO_ENABLED) return null // demo access is disabled in production
     const DEMO_ACCOUNTS = {
       patient: {
         user:         { id: 'demo-1', name: 'Demo User',           email: 'demo.user@smartmedicine.com',     role: 'patient',    isDemo: true },
@@ -274,6 +286,11 @@ export function AuthProvider({ children }) {
    * Logout — clears session and user state.
    */
   const logout = useCallback(() => {
+    // Tell the server to cancel the refresh token (best effort), then clear locally.
+    const refreshToken = storage.get(STORAGE_KEYS.REFRESH_TOKEN)
+    if (refreshToken && !refreshToken.startsWith('demo_refresh_token')) {
+      authService.logout({ refresh_token: refreshToken }).catch(() => {})
+    }
     clearSession()
   }, [])
 
