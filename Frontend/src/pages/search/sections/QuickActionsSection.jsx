@@ -33,6 +33,7 @@
  *   All cards are UI placeholders. Implementation deferred to future modules.
  */
 
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   HiOutlineCamera,
@@ -42,6 +43,7 @@ import {
 } from 'react-icons/hi2'
 import { MdMedication } from 'react-icons/md'
 import Badge from '../../../components/ui/Badge'
+import VoiceSearchModal from '../../../components/common/VoiceSearchModal'
 import { ROUTES } from '../../../constants/routes'
 
 // ======================================
@@ -55,11 +57,11 @@ const QUICK_ACTIONS = [
     iconBg: 'bg-secondary-100',
     iconColor: 'text-secondary-600',
     topBorder: 'border-t-secondary-500',
-    badge: { variant: 'neutral', label: 'Coming Soon' },
+    badge: { variant: 'success', label: 'Available', dot: true },
     title: 'Scan Prescription',
     description:
       'Upload or capture a prescription image. OCR technology automatically identifies and searches the medicines listed.',
-    footer: null,
+    footer: { to: ROUTES.USER.PRESCRIPTION_SEARCH, label: 'Scan Now' },
   },
   {
     id: 'voice-search',
@@ -67,11 +69,11 @@ const QUICK_ACTIONS = [
     iconBg: 'bg-primary-100',
     iconColor: 'text-primary-600',
     topBorder: 'border-t-primary-500',
-    badge: { variant: 'neutral', label: 'Coming Soon' },
+    badge: { variant: 'success', label: 'Available', dot: true },
     title: 'Voice Search',
     description:
       'Search medicines using your voice. Speak the medicine name or describe your symptoms for intelligent suggestions.',
-    footer: null,
+    footer: { action: 'voice', label: 'Speak Now' },
   },
   {
     id: 'scan-barcode',
@@ -105,7 +107,7 @@ const QUICK_ACTIONS = [
 // ======================================
 // QuickActionCard sub-component
 // ======================================
-function QuickActionCard({ id, icon: Icon, iconBg, iconColor, topBorder, badge, title, description, footer }) {
+function QuickActionCard({ id, icon: Icon, iconBg, iconColor, topBorder, badge, title, description, footer, onAction }) {
   return (
     <article
       aria-labelledby={`quick-action-${id}-title`}
@@ -140,7 +142,17 @@ function QuickActionCard({ id, icon: Icon, iconBg, iconColor, topBorder, badge, 
 
       {/* Footer action or coming-soon note */}
       <div className="pt-3 border-t border-slate-100">
-        {footer ? (
+        {footer?.action ? (
+          <button
+            type="button"
+            onClick={() => onAction?.(footer.action)}
+            aria-label={`${footer.label} — ${title}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-success-600 hover:text-success-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success-500 rounded"
+          >
+            {footer.label}
+            <HiOutlineArrowRight size={13} aria-hidden="true" />
+          </button>
+        ) : footer ? (
           <Link
             to={footer.to}
             aria-label={`${footer.label} — ${title}`}
@@ -151,7 +163,7 @@ function QuickActionCard({ id, icon: Icon, iconBg, iconColor, topBorder, badge, 
           </Link>
         ) : (
           <span className="text-xs text-slate-400 italic">
-            Feature under development
+            Not available yet
           </span>
         )}
       </div>
@@ -162,7 +174,8 @@ function QuickActionCard({ id, icon: Icon, iconBg, iconColor, topBorder, badge, 
 // ======================================
 // Quick Actions Section
 // ======================================
-function QuickActionsSection() {
+function QuickActionsSection({ onSearch }) {
+  const [voiceOpen, setVoiceOpen] = useState(false)
   return (
     <section aria-labelledby="quick-actions-heading" className="py-6">
 
@@ -175,7 +188,7 @@ function QuickActionsSection() {
           Quick Actions
         </h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Alternative ways to find medicines — available now and coming soon.
+          Other ways to find medicines.
         </p>
       </div>
 
@@ -187,11 +200,16 @@ function QuickActionsSection() {
       >
         {QUICK_ACTIONS.map((action) => (
           <div key={action.id} role="listitem">
-            <QuickActionCard {...action} />
+            <QuickActionCard {...action} onAction={(a) => a === 'voice' && setVoiceOpen(true)} />
           </div>
         ))}
       </div>
 
+      <VoiceSearchModal
+        isOpen={voiceOpen}
+        onClose={() => setVoiceOpen(false)}
+        onResult={(text) => onSearch?.(text)}
+      />
     </section>
   )
 }

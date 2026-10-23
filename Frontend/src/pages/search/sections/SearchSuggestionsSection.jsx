@@ -33,28 +33,16 @@
  *   - Keyboard: ArrowDown/Up moves activeIndex, Enter selects, Escape closes
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import useDebounce from '../../../hooks/useDebounce'
+import medicineService from '../../../services/medicineService'
 import {
   HiOutlineMagnifyingGlass,
   HiOutlineClock,
   HiOutlineArrowUpRight,
 } from 'react-icons/hi2'
 import { MdMedication } from 'react-icons/md'
-
-// ======================================
-// Placeholder suggestions data
-// TODO: Replace with GET /api/v1/medicines/suggest?q={query} in Module 7B
-// ======================================
-const ALL_SUGGESTIONS = [
-  { id: 1, name: 'Paracetamol',  generic: 'Acetaminophen',     category: 'Analgesic'      },
-  { id: 2, name: 'Crocin',       generic: 'Paracetamol',       category: 'Analgesic'      },
-  { id: 3, name: 'Dolo 650',     generic: 'Paracetamol 650mg', category: 'Analgesic'      },
-  { id: 4, name: 'Azithromycin', generic: 'Azithromycin',      category: 'Antibiotic'     },
-  { id: 5, name: 'Amoxicillin',  generic: 'Amoxicillin',       category: 'Antibiotic'     },
-  { id: 6, name: 'Metformin',    generic: 'Metformin HCl',     category: 'Antidiabetic'   },
-  { id: 7, name: 'Cetirizine',   generic: 'Cetirizine HCl',    category: 'Antihistamine'  },
-  { id: 8, name: 'Ibuprofen',    generic: 'Ibuprofen',         category: 'NSAID'          },
-]
 
 // ======================================
 // SuggestionItem sub-component
@@ -101,13 +89,18 @@ function SuggestionItem({ item, isActive, onSelect, onHover }) {
 function SearchSuggestionsSection({ query = '', onSelect, onClose }) {
   const [activeId, setActiveId] = useState(null)
 
-  // Filter suggestions based on query
-  const filtered = query.trim().length > 0
-    ? ALL_SUGGESTIONS.filter((s) =>
-        s.name.toLowerCase().includes(query.toLowerCase()) ||
-        s.generic.toLowerCase().includes(query.toLowerCase())
-      )
-    : ALL_SUGGESTIONS
+  // Real suggestions from the medicines catalogue (debounced)
+  const debounced = useDebounce(query.trim(), 250)
+  const { data } = useQuery({
+    queryKey: ['medicines', 'suggest', debounced],
+    queryFn: async () => (await medicineService.suggest(debounced, 8)).data,
+    enabled: debounced.length >= 2,
+    staleTime: 5 * 60 * 1000,
+  })
+  const filtered = useMemo(
+    () => (debounced.length >= 2 ? (data?.suggestions ?? []) : []),
+    [debounced, data],
+  )
 
   // activeId auto-resolves: if the id no longer exists in filtered
   // after a query change, findIndex returns -1 and keyboard nav restarts.
@@ -153,7 +146,7 @@ function SearchSuggestionsSection({ query = '', onSelect, onClose }) {
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 bg-slate-50">
         <HiOutlineMagnifyingGlass size={13} className="text-slate-400" aria-hidden="true" />
         <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-          {query.trim() ? `Results for "${query}"` : 'Popular Medicines'}
+          {`Suggestions for "${query.trim()}"`}
         </span>
         <span className="ml-auto text-[10px] text-slate-400">
           {filtered.length} found
@@ -195,7 +188,7 @@ function SearchSuggestionsSection({ query = '', onSelect, onClose }) {
         </div>
         <span className="text-[10px] text-slate-400 flex items-center gap-1">
           <HiOutlineClock size={10} aria-hidden="true" />
-          Placeholder data
+          From the medicine catalogue
         </span>
       </div>
     </div>

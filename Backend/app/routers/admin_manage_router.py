@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.schemas.admin_manage_schemas import MedicineWrite, UserRoleRequest, UserStatusRequest
 from app.schemas.token_schema import TokenPayload
+from app.services.audit_service import record
 from app.services.admin_manage_service import (
     create_medicine,
     get_overview,
@@ -34,12 +35,16 @@ async def users(q: str = Query(default="", max_length=80), role: str | None = Qu
 
 @router.post("/users/{user_id}/status")
 async def user_status(user_id: str, body: UserStatusRequest, current_user: TokenPayload = _ADMIN):
-    return await set_user_status(user_id, body.status, current_user.sub)
+    result = await set_user_status(user_id, body.status, current_user.sub)
+    await record(current_user.sub, "user.status", "user", user_id, f"Set user status to {body.status}", {"status": str(body.status)})
+    return result
 
 
 @router.post("/users/{user_id}/role")
 async def user_role(user_id: str, body: UserRoleRequest, current_user: TokenPayload = _ADMIN):
-    return await set_user_role(user_id, body.role, current_user.sub)
+    result = await set_user_role(user_id, body.role, current_user.sub)
+    await record(current_user.sub, "user.role", "user", user_id, f"Changed user role to {body.role}", {"role": str(body.role)})
+    return result
 
 
 @router.get("/medicines")
@@ -52,19 +57,27 @@ async def medicines(q: str = Query(default="", max_length=80), category: str | N
 
 @router.post("/medicines", status_code=201)
 async def add_medicine(data: MedicineWrite, current_user: TokenPayload = _ADMIN):
-    return await create_medicine(data)
+    result = await create_medicine(data)
+    await record(current_user.sub, "medicine.create", "medicine", str(getattr(data, "pmbi_code", "")), f"Added medicine {getattr(data, 'generic_name', '')}")
+    return result
 
 
 @router.put("/medicines/{code}")
 async def edit_medicine(code: str, data: MedicineWrite, current_user: TokenPayload = _ADMIN):
-    return await update_medicine(code, data)
+    result = await update_medicine(code, data)
+    await record(current_user.sub, "medicine.update", "medicine", code, f"Edited medicine {code}")
+    return result
 
 
 @router.post("/medicines/{code}/hide")
 async def hide_medicine(code: str, current_user: TokenPayload = _ADMIN):
-    return await set_medicine_active(code, False)
+    result = await set_medicine_active(code, False)
+    await record(current_user.sub, "medicine.hide", "medicine", code, f"Hid medicine {code}")
+    return result
 
 
 @router.post("/medicines/{code}/show")
 async def show_medicine(code: str, current_user: TokenPayload = _ADMIN):
-    return await set_medicine_active(code, True)
+    result = await set_medicine_active(code, True)
+    await record(current_user.sub, "medicine.show", "medicine", code, f"Made medicine {code} visible")
+    return result

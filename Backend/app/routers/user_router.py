@@ -4,7 +4,16 @@ from app.schemas.ranking_preferences_schemas import (
     RankingPreferences,
     RankingPreferencesResponse,
 )
+from app.schemas.account_schemas import ChangePasswordRequest, ProfileUpdateRequest
 from app.schemas.token_schema import TokenPayload
+from app.services.account_service import (
+    change_password,
+    list_saved,
+    save_medicine,
+    unsave_medicine,
+    update_profile,
+)
+from app.utils.rate_limit import check_limit
 from app.services.user_preference_service import (
     get_user_ranking_preferences,
     reset_user_ranking_preferences,
@@ -108,3 +117,45 @@ async def reset_my_ranking_preferences(
     return await reset_user_ranking_preferences(
         user_id=current_user.sub,
     )
+
+
+# =====================================================
+# Own profile and password
+# =====================================================
+
+@router.put("/me/profile")
+async def update_my_profile(
+    body: ProfileUpdateRequest,
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Change the logged-in user's name and phone number."""
+    return await update_profile(current_user.sub, body.full_name, body.phone_number)
+
+
+@router.post("/me/change-password")
+async def change_my_password(
+    body: ChangePasswordRequest,
+    current_user: TokenPayload = Depends(get_current_user),
+):
+    """Change password (needs the current one). Signs out other devices."""
+    check_limit("change-password", current_user.sub, 5, 900)
+    return await change_password(current_user.sub, body.current_password, body.new_password)
+
+
+# =====================================================
+# Saved medicines
+# =====================================================
+
+@router.get("/me/saved-medicines")
+async def my_saved_medicines(current_user: TokenPayload = Depends(get_current_user)):
+    return await list_saved(current_user.sub)
+
+
+@router.put("/me/saved-medicines/{pmbi_code}")
+async def save_one_medicine(pmbi_code: str, current_user: TokenPayload = Depends(get_current_user)):
+    return await save_medicine(current_user.sub, pmbi_code)
+
+
+@router.delete("/me/saved-medicines/{pmbi_code}")
+async def unsave_one_medicine(pmbi_code: str, current_user: TokenPayload = Depends(get_current_user)):
+    return await unsave_medicine(current_user.sub, pmbi_code)

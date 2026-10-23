@@ -25,6 +25,7 @@ import { Sidebar, TopBar } from '../components/navigation'
 import { USER_NAV } from '../constants/navConfig'
 import { useAuth } from '../contexts/AuthContext'
 import DemoBanner from '../components/common/DemoBanner'
+import PharmacyRequestBanner from '../components/common/PharmacyRequestBanner'
 
 function UserLayout() {
   const [collapsed, setCollapsed]       = useState(false)
@@ -55,6 +56,9 @@ function UserLayout() {
 
         {/* Demo mode banner — visible only during demo sessions */}
         {isDemo && <DemoBanner />}
+
+        {/* Status of the user's pharmacy-owner request, if they applied */}
+        {!isDemo && <PharmacyRequestBanner />}
 
         <main
           id="main-content"

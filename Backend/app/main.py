@@ -7,7 +7,9 @@ from app.core.config import settings
 from app.database.connection import (
     close_mongodb_connection,
     connect_to_mongodb,
+    get_database,
 )
+from app.database.indexes import ensure_indexes
 from app.routers.admin_router import router as admin_router
 from app.routers.auth_router import router as auth_router
 from app.routers.kendra_router import router as kendra_router
@@ -18,11 +20,13 @@ from app.routers.pharmacy_registration_router import router as pharmacy_registra
 from app.routers.admin_kendra_router import router as admin_kendra_router
 from app.routers.admin_manage_router import router as admin_manage_router
 from app.routers.user_router import router as user_router
+from app.routers.admin_audit_router import router as admin_audit_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_to_mongodb()
+    await ensure_indexes(get_database())  # fast searches + no duplicate users/medicines
 
     try:
         yield
@@ -71,6 +75,8 @@ app.include_router(report_router)
 app.include_router(pharmacy_registration_router)
 app.include_router(admin_manage_router)
 app.include_router(user_router)
+app.include_router(admin_manage_router)
+app.include_router(admin_audit_router)
 
 @app.get("/")
 async def root():

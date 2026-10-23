@@ -1,77 +1,46 @@
-/**
- * Component: SavedMedicinesSection
- *
- * Description:
- *   Displays the user's saved medicines with quick actions.
- *   Reuses Badge from ui components.
- *
- * Backend readiness:
- *   - medicines → GET /api/v1/users/me/saved-medicines
- *   - remove    → DELETE /api/v1/users/me/saved-medicines/:id
- */
-
-import { useState } from 'react'
-import {
-  HiOutlineArrowRight, HiOutlineTrash, HiOutlineShare,
-  HiOutlineArrowsRightLeft,
-} from 'react-icons/hi2'
+/** Saved medicines: the user's real saved list (heart on a medicine's page). */
+import { Link } from 'react-router-dom'
+import { HiOutlineArrowRight, HiOutlineTrash } from 'react-icons/hi2'
 import { MdMedication } from 'react-icons/md'
 import Badge from '../../../components/ui/Badge'
-import { Link } from 'react-router-dom'
 import { ROUTES } from '../../../constants/routes'
+import useSavedMedicines from '../../../hooks/useSavedMedicines'
 
-// TODO: Replace with GET /api/v1/users/me/saved-medicines
-const INIT_SAVED = [
-  { id: 's1', name: 'Paracetamol IP 500mg', genericAlt: 'Jan Aushadhi Generic', savedDate: '2 days ago', availability: 'available' },
-  { id: 's2', name: 'Azithromycin 500mg',   genericAlt: 'Generic Available',    savedDate: '5 days ago', availability: 'available' },
-  { id: 's3', name: 'Metformin 500mg',       genericAlt: 'Jan Aushadhi Generic', savedDate: '1 week ago', availability: 'limited'   },
-  { id: 's4', name: 'Cetirizine 10mg',       genericAlt: 'Generic Available',    savedDate: '2 weeks ago',availability: 'available' },
-]
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
 
-const AVAIL = {
-  available: { variant: 'success', label: 'In Stock'      },
-  limited:   { variant: 'warning', label: 'Limited Stock' },
-  unavailable:{ variant: 'danger', label: 'Out of Stock'  },
-}
-
-function SavedMedicineCard({ medicine, onRemove }) {
-  const avail = AVAIL[medicine.availability] ?? AVAIL.available
+function SavedMedicineCard({ medicine, onRemove, busy }) {
+  const price = Number(medicine.jan_aushadhi_mrp) || 0
+  const brand = Number(medicine.branded_avg_mrp) || 0
   return (
     <article
-      aria-label={medicine.name}
-      className="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      aria-label={medicine.brand_name}
+      className="flex items-start gap-3 p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-50 shrink-0">
         <MdMedication size={20} className="text-primary-600" aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900 truncate">{medicine.name}</h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">{medicine.genericAlt}</p>
-          </div>
-          <Badge variant={avail.variant} dot size="sm">{avail.label}</Badge>
-        </div>
-        <p className="text-[10px] text-slate-400 mt-1">Saved {medicine.savedDate}</p>
+        <h3 className="text-sm font-semibold text-slate-900 truncate">{medicine.brand_name}</h3>
+        <p className="text-[11px] text-slate-400 mt-0.5 truncate">{medicine.composition || medicine.generic_name}</p>
+        <p className="text-xs text-slate-700 mt-1">
+          <span className="font-bold text-primary-700">₹{price}</span>
+          {brand > price && <span className="text-slate-400"> · brand ₹{brand}</span>}
+        </p>
+        <p className="text-[10px] text-slate-400 mt-1">Saved {formatDate(medicine.saved_at)}</p>
         <div className="flex items-center gap-1.5 mt-2">
           <Link
-            to={ROUTES.USER.SEARCH}
-            aria-label={`View details for ${medicine.name}`}
-            className="flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-700 px-2 py-1 rounded-lg hover:bg-primary-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            to={ROUTES.USER.MEDICINE_DETAIL.replace(':id', medicine.id)}
+            className="flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-700 px-2 py-1 rounded-lg hover:bg-primary-50"
           >
             <HiOutlineArrowRight size={11} aria-hidden="true" /> View
           </Link>
-          <button type="button" aria-label={`Compare ${medicine.name}`} className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-primary-600 px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-300">
-            <HiOutlineArrowsRightLeft size={11} aria-hidden="true" /> Compare
-          </button>
-          <button type="button" aria-label={`Share ${medicine.name}`} className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-secondary-600 px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-300">
-            <HiOutlineShare size={11} aria-hidden="true" /> Share
-          </button>
           <button
             type="button"
-            onClick={() => onRemove(medicine.id)}
-            aria-label={`Remove ${medicine.name} from saved`}
-            className="flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-danger-500 px-2 py-1 rounded-lg hover:bg-danger-50 transition-colors ml-auto focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-danger-400"
+            disabled={busy}
+            onClick={() => onRemove(medicine.pmbi_code)}
+            aria-label={`Remove ${medicine.brand_name} from saved`}
+            className="flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-danger-500 px-2 py-1 rounded-lg hover:bg-danger-50 ml-auto disabled:opacity-50"
           >
             <HiOutlineTrash size={11} aria-hidden="true" /> Remove
           </button>
@@ -81,28 +50,27 @@ function SavedMedicineCard({ medicine, onRemove }) {
   )
 }
 
-// ======================================================
-// Saved Medicines
-// ======================================================
 function SavedMedicinesSection() {
-  const [items, setItems] = useState(INIT_SAVED)
+  const { items, isLoading, isError, toggle, isToggling } = useSavedMedicines()
 
   return (
     <section aria-labelledby="saved-medicines-heading">
       <div className="flex items-center justify-between mb-3">
-        <h2 id="saved-medicines-heading" className="text-base font-bold text-slate-900">
-          Saved Medicines
-        </h2>
+        <h2 id="saved-medicines-heading" className="text-base font-bold text-slate-900">Saved Medicines</h2>
         <Badge variant="primary" size="sm">{items.length}</Badge>
       </div>
-      {items.length === 0 ? (
-        <div className="text-center py-10 text-slate-400 text-sm">No saved medicines yet.</div>
+      {isLoading ? (
+        <p className="py-6 text-sm text-slate-400">Loading…</p>
+      ) : isError ? (
+        <p className="py-6 text-sm text-danger-600">Could not load your saved medicines.</p>
+      ) : items.length === 0 ? (
+        <div className="text-center py-10 text-slate-400 text-sm">
+          No saved medicines yet. Open any medicine and tap &ldquo;Save Medicine&rdquo;.
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="list">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {items.map((m) => (
-            <div key={m.id} role="listitem">
-              <SavedMedicineCard medicine={m} onRemove={(id) => setItems((prev) => prev.filter((i) => i.id !== id))} />
-            </div>
+            <SavedMedicineCard key={m.pmbi_code} medicine={m} busy={isToggling} onRemove={toggle} />
           ))}
         </div>
       )}

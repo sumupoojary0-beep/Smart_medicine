@@ -120,6 +120,26 @@ export function AuthProvider({ children }) {
   }, [])
 
   /**
+   * refreshProfile — re-reads the signed-in user's profile from the backend.
+   * Used after an admin approves a pharmacy request, so the new role takes
+   * effect without logging out and in again.
+   */
+  const refreshProfile = useCallback(async () => {
+    const { data: profile } = await authService.getMe()
+    const user = {
+      id: profile.id,
+      name: profile.full_name,
+      email: profile.email,
+      phone: profile.phone_number,
+      role: BACKEND_ROLE_MAP[profile.role] ?? 'patient',
+      assignedKendraId: profile.assigned_kendra_id ?? null,
+    }
+    storage.set(STORAGE_KEYS.USER, user)
+    setCurrentUser(user)
+    return user
+  }, [])
+
+  /**
    * loginAsDemo — Instantly authenticates a pre-defined demo account.
    *
    * ⚠ DEMO / DEVELOPMENT ONLY — Demo authentication is intended only for
@@ -304,6 +324,7 @@ export function AuthProvider({ children }) {
     clearError,
     login,
     loginAsDemo,
+    refreshProfile,
     register,
     verifyOtp,
     resendOtp,

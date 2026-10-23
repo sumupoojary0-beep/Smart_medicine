@@ -40,7 +40,7 @@
  */
 
 import { lazy, Suspense } from 'react'
-import { Routes, Route }  from 'react-router-dom'
+import { Routes, Route, Navigate, useParams }  from 'react-router-dom'
 
 // ── Layouts ───────────────────────────────────────────────────────────────────
 import MainLayout     from '../layouts/MainLayout'
@@ -98,7 +98,6 @@ const PrescriptionUploadPage = lazy(
 )
 const SearchResultsPage       = lazy(() => import('../pages/results/SearchResultsPage'))
 const MedicineDetailsPage     = lazy(() => import('../pages/medicine/MedicineDetailsPage'))
-const GenericRecommendationPage = lazy(() => import('../pages/generic/GenericRecommendationPage'))
 const NearbyPharmaciesPage    = lazy(() => import('../pages/pharmacies/NearbyPharmaciesPage'))
 const NotificationsPage       = lazy(() => import('../pages/notifications/NotificationsPage'))
 const ProfilePage             = lazy(() => import('../pages/profile/ProfilePage'))
@@ -136,6 +135,13 @@ const AdminSettings       = lazy(() => import('../pages/admin/AdminSettings'))
 // =====================================================
 // Application Router
 // =====================================================
+// The old demo "generic recommendation" page was replaced by the medicine
+// details page, which already shows the real generic, price and composition.
+function GenericRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/medicine/${id}`} replace />
+}
+
 function AppRouter() {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -185,7 +191,7 @@ allowedRoles={[
   element={<PrescriptionUploadPage />}
 />
             <Route path="medicine/:id"            element={<MedicineDetailsPage />} />
-            <Route path="medicine/:id/generic"    element={<GenericRecommendationPage />} />
+            <Route path="medicine/:id/generic"    element={<GenericRedirect />} />
             {/* Pharmacy Map flow */}
             <Route path="pharmacies/nearby"       element={<NearbyPharmaciesPage />} />
             {/* Account */}

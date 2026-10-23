@@ -53,9 +53,6 @@ import RecentSearchesSection     from './sections/RecentSearchesSection'
 import PopularMedicinesSection   from './sections/PopularMedicinesSection'
 import MedicineCategoriesSection from './sections/MedicineCategoriesSection'
 import SearchFiltersSection      from './sections/SearchFiltersSection'
-import SearchLoadingSection      from './sections/SearchLoadingSection'
-import SearchEmptyState          from './sections/SearchEmptyState'
-import SearchErrorState          from './sections/SearchErrorState'
 
 import Divider from '../../components/ui/Divider'
 import { ROUTES } from '../../constants/routes'
@@ -67,11 +64,6 @@ function MedicineSearchPage() {
   const [query,           setQuery]           = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
 
-  // Placeholder UI-state flags for loading / empty / error demos
-  // TODO: Module 7B will replace these with actual async states
-  // from TanStack Query (isLoading, isError, data.length === 0).
-  const [demoState] = useState('idle') // 'idle' | 'loading' | 'empty' | 'error'
-
   const navigate = useNavigate()
 
   // ── Shared handlers ──────────────────────────────────────────────────────
@@ -79,7 +71,6 @@ function MedicineSearchPage() {
     const trimmed = (value ?? query).trim()
     if (!trimmed) return
     setShowSuggestions(false)
-    // TODO: Module 7B — navigate to /search/results?q=...
     navigate(`${ROUTES.USER.SEARCH_RESULTS}?q=${encodeURIComponent(trimmed)}`)
   }, [query, navigate])
 
@@ -98,23 +89,21 @@ function MedicineSearchPage() {
     setShowSuggestions(false)
   }, [])
 
-  const handleCategorySelect = useCallback((_categoryId) => {
-    // TODO: Module 7B — apply category filter to search results
-  }, [])
-
-  const handleFiltersApply = useCallback((_filters) => {
-    // TODO: Module 7B — pass filter payload to search API
-  }, [])
-
-  const handleFiltersReset = useCallback(() => {
-    // TODO: Module 7B — clear all active filters
-  }, [])
-
-  const handleRetrySearch = useCallback(() => {
-    setQuery('')
+  // Category / price filters open the results page with those filters.
+  const handleFiltersApply = useCallback((filters) => {
+    const params = new URLSearchParams()
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') params.set(key, value)
+    })
+    if ([...params.keys()].length === 0) return
     setShowSuggestions(false)
-    // TODO: Module 7B — re-trigger search or focus input
-  }, [])
+    navigate(`${ROUTES.USER.SEARCH_RESULTS}?${params.toString()}`)
+  }, [navigate])
+
+  const handleCategorySelect = useCallback(
+    (category) => handleFiltersApply({ category }),
+    [handleFiltersApply],
+  )
 
   return (
     <article aria-label="Medicine Search">
@@ -153,7 +142,7 @@ function MedicineSearchPage() {
       {/* ===================================================== */}
       {/* Quick Actions                                         */}
       {/* ===================================================== */}
-      <QuickActionsSection />
+      <QuickActionsSection onSearch={handleSearch} />
 
       <Divider className="my-0" />
 
@@ -181,53 +170,7 @@ function MedicineSearchPage() {
       {/* ===================================================== */}
       {/* Search Filters                                        */}
       {/* ===================================================== */}
-      <SearchFiltersSection
-        onApply={handleFiltersApply}
-        onReset={handleFiltersReset}
-      />
-
-      {/*
-        =====================================================
-        Loading / Empty / Error states
-        These are rendered conditionally based on the async
-        state of the search API in Module 7B.
-        Currently shown as demo blocks — replace the
-        demoState variable with real TanStack Query state.
-        =====================================================
-      */}
-
-      {/* ===================================================== */}
-      {/* Loading State                                         */}
-      {/* Shown when: isLoading === true (Module 7B)            */}
-      {/* ===================================================== */}
-      {demoState === 'loading' && (
-        <>
-          <Divider className="my-0" />
-          <SearchLoadingSection variant="results" />
-        </>
-      )}
-
-      {/* ===================================================== */}
-      {/* Empty State                                           */}
-      {/* Shown when: !isLoading && results.length === 0        */}
-      {/* ===================================================== */}
-      {demoState === 'empty' && (
-        <>
-          <Divider className="my-0" />
-          <SearchEmptyState query={query} onRetry={handleRetrySearch} />
-        </>
-      )}
-
-      {/* ===================================================== */}
-      {/* Error State                                           */}
-      {/* Shown when: isError === true (Module 7B)              */}
-      {/* ===================================================== */}
-      {demoState === 'error' && (
-        <>
-          <Divider className="my-0" />
-          <SearchErrorState onRetry={handleRetrySearch} />
-        </>
-      )}
+      <SearchFiltersSection onApply={handleFiltersApply} />
 
     </article>
   )

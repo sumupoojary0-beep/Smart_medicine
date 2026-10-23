@@ -10,6 +10,7 @@ from app.services.pharmacy_registration_service import (
     reject_request,
     search_open_kendras,
 )
+from app.services.audit_service import record
 from app.utils.constants import UserRole
 from app.utils.jwt_helper import get_current_user, require_role
 from app.utils.rate_limit import ip_limit
@@ -47,7 +48,9 @@ async def requests_list(
 
 @router.post("/requests/{request_id}/approve")
 async def approve(request_id: str, current_user: TokenPayload = Depends(require_role([UserRole.ADMIN]))):
-    return await approve_request(request_id, current_user.sub)
+    result = await approve_request(request_id, current_user.sub)
+    await record(current_user.sub, "pharmacy_request.approve", "pharmacy_request", request_id, "Approved pharmacy owner request")
+    return result
 
 
 @router.post("/requests/{request_id}/reject")
@@ -56,4 +59,6 @@ async def reject(
     body: RejectRequest,
     current_user: TokenPayload = Depends(require_role([UserRole.ADMIN])),
 ):
-    return await reject_request(request_id, current_user.sub, body.reason)
+    result = await reject_request(request_id, current_user.sub, body.reason)
+    await record(current_user.sub, "pharmacy_request.reject", "pharmacy_request", request_id, "Rejected pharmacy owner request", {"reason": body.reason})
+    return result

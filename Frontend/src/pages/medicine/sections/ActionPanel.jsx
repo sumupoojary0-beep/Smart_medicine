@@ -27,42 +27,40 @@ import {
 } from 'react-icons/hi2'
 import Button from '../../../components/ui/Button'
 import notificationService from '../../../services/notificationService'
+import useSavedMedicines from '../../../hooks/useSavedMedicines'
 
 // =====================================================
 // Action Panel
 // =====================================================
 function ActionPanel({ medicine = {} }) {
-  const [isSaved,   setIsSaved]   = useState(false)
   const [isShared,  setIsShared]  = useState(false)
   const [notifyState, setNotifyState] = useState('idle') // 'idle' | 'loading' | 'subscribed' | 'error'
 
   const { name = 'Medicine', price, pmbiCode } = medicine
+  const { isSaved: isMedicineSaved, toggle: toggleSaved, isToggling } = useSavedMedicines()
+  const isSaved = isMedicineSaved(pmbiCode)
 
   function handleSave() {
-    setIsSaved((s) => !s)
-    // TODO: POST/DELETE /api/v1/users/me/saved-medicines/:id
+    if (pmbiCode) toggleSaved(pmbiCode)
   }
 
-  function handleShare() {
-    setIsShared(true)
-    setTimeout(() => setIsShared(false), 2000)
-    // TODO: Web Share API or custom share dialog
+  async function handleShare() {
+    const url = window.location.href
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: name, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setIsShared(true)
+      setTimeout(() => setIsShared(false), 2000)
+    } catch {
+      /* user cancelled the share sheet, or clipboard is blocked */
+    }
   }
 
   function handlePrint() {
-    // TODO: window.print() with print-specific CSS
-  }
-
-  function handleDownloadPdf() {
-    // TODO: GET /api/v1/medicines/:id/pdf
-  }
-
-  function handleReport() {
-    // TODO: open report dialog / POST /api/v1/medicines/:id/report
-  }
-
-  function handleCompare() {
-    // TODO: add to compare selection and navigate to results
+    window.print()
   }
 
   async function handleNotifyMe() {
@@ -85,20 +83,11 @@ function ActionPanel({ medicine = {} }) {
 
       {/* Primary actions */}
       <Button
-        variant="primary"
-        fullWidth
-        leftIcon={<HiOutlineArrowsRightLeft size={16} />}
-        onClick={handleCompare}
-        aria-label={`Compare ${name} with other medicines`}
-      >
-        Compare Medicine
-      </Button>
-
-      <Button
         variant={isSaved ? 'secondary' : 'outline'}
         fullWidth
         leftIcon={isSaved ? <HiBookmark size={16} /> : <HiOutlineBookmark size={16} />}
         onClick={handleSave}
+        disabled={isToggling || !pmbiCode}
         aria-label={isSaved ? `Remove ${name} from saved` : `Save ${name}`}
         aria-pressed={isSaved}
       >
@@ -151,27 +140,6 @@ function ActionPanel({ medicine = {} }) {
         Print Information
       </button>
 
-      <button
-        type="button"
-        onClick={handleDownloadPdf}
-        aria-label={`Download PDF for ${name}`}
-        className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 text-left"
-      >
-        <HiOutlineDocumentArrowDown size={15} className="text-slate-400" aria-hidden="true" />
-        Download PDF
-        {/* TODO: GET /api/v1/medicines/:id/pdf */}
-      </button>
-
-      <button
-        type="button"
-        onClick={handleReport}
-        aria-label={`Report incorrect information for ${name}`}
-        className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-danger-600 hover:bg-danger-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-400 text-left"
-      >
-        <HiOutlineFlag size={15} aria-hidden="true" />
-        Report Incorrect Info
-      </button>
-
       {/* Price summary */}
       {price !== undefined && (
         <>
@@ -180,7 +148,6 @@ function ActionPanel({ medicine = {} }) {
             <p className="text-[10px] text-slate-400 uppercase tracking-wider">Generic Price</p>
             <p className="text-2xl font-extrabold text-primary-700">₹{price}</p>
             <p className="text-xs text-slate-400">at Jan Aushadhi Kendra</p>
-            {/* TODO: price from API */}
           </div>
         </>
       )}

@@ -177,11 +177,50 @@ def _rank_fallback_results(docs: list, ingredients: list[str], query: str) -> li
     )
 
 
+SORTS = {"relevance", "price_asc", "price_desc", "name_asc", "name_desc"}
+
+
+def _price_filter(min_price, max_price) -> Optional[dict]:
+    clause: dict = {}
+    if min_price is not None:
+        clause["$gte"] = min_price
+    if max_price is not None:
+        clause["$lte"] = max_price
+    return clause or None
+
+
+def _mongo_sort(sort: str) -> list:
+    """Server-side sort; ties are broken by name so paging is stable."""
+    if sort == "price_asc":
+        return [("jan_aushadhi_mrp", 1), ("brand_name", 1)]
+    if sort == "price_desc":
+        return [("jan_aushadhi_mrp", -1), ("brand_name", 1)]
+    if sort == "name_desc":
+        return [("brand_name", -1)]
+    return [("brand_name", 1)]
+
+
+def _sort_in_python(docs: list, sort: str) -> list:
+    """Same sorts for the (small) ingredient-fallback result set."""
+    if sort == "price_asc":
+        return sorted(docs, key=lambda d: (d.get("jan_aushadhi_mrp") or 0, d.get("brand_name", "")))
+    if sort == "price_desc":
+        return sorted(docs, key=lambda d: (-(d.get("jan_aushadhi_mrp") or 0), d.get("brand_name", "")))
+    if sort == "name_asc":
+        return sorted(docs, key=lambda d: d.get("brand_name", ""))
+    if sort == "name_desc":
+        return sorted(docs, key=lambda d: d.get("brand_name", ""), reverse=True)
+    return docs  # relevance: keep the ranking
+
+
 async def search_medicines(
     query: Optional[str] = None,
     category: Optional[str] = None,
     page: int = DEFAULT_PAGE,
     page_size: int = DEFAULT_PAGE_SIZE,
+    sort: str = "relevance",
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
 ) -> dict:
     """
     Search medicines by brand name, generic name, composition, or pmbi_code
@@ -232,6 +271,10 @@ async def search_medicines(
     if category:
         mongo_filter["category"] = category
 
+    price_filter = _price_filter(min_price, max_price)
+    if price_filter:
+        mongo_filter["jan_aushadhi_mrp"] = price_filter
+
     total = await db[MEDICINES_COLLECTION].count_documents(mongo_filter)
 
     resolved_info = None
@@ -251,6 +294,8 @@ async def search_medicines(
             }
             if category:
                 fallback_filter["category"] = category
+            if price_filter:
+                fallback_filter["jan_aushadhi_mrp"] = price_filter
 
             fallback_total = await db[MEDICINES_COLLECTION].count_documents(
                 fallback_filter
@@ -275,6 +320,7 @@ async def search_medicines(
             resolved_info["ingredients"],
             resolved_info["query"],
         )
+        ranked = _sort_in_python(ranked, sort)
         start = (page - 1) * page_size
         results = [_serialize(doc) for doc in ranked[start:start + page_size]]
     else:
@@ -283,7 +329,7 @@ async def search_medicines(
             .find(mongo_filter)
             .skip((page - 1) * page_size)
             .limit(page_size)
-            .sort("brand_name", 1)
+            .sort(_mongo_sort(sort))
         )
 
         results = [_serialize(doc) async for doc in cursor]
@@ -371,3 +417,88 @@ async def delete_medicine(medicine_id: str) -> dict:
 
     logger.info(f"Medicine deactivated: {medicine_id}")
     return {"message": "Medicine deleted successfully."}
+
+
+# =====================================================
+# Suggestions, filters and top savings (real catalogue data)
+# =====================================================
+
+async def suggest_medicines(query: str, limit: int = 8) -> list:
+    """Autocomplete: names that start with / contain the typed text."""
+    db = get_database()
+    text = (query or "").strip()
+    if len(text) < 2:
+        return []
+    safe = re.escape(text)
+    docs = db[MEDICINES_COLLECTION].find(
+        {
+            "is_active": {"$ne": False},
+            "$or": [
+                {"brand_name": {"$regex": safe, "$options": "i"}},
+                {"generic_name": {"$regex": safe, "$options": "i"}},
+                {"composition": {"$regex": safe, "$options": "i"}},
+            ],
+        },
+        {"brand_name": 1, "generic_name": 1, "composition": 1, "category": 1},
+    ).limit(60)
+
+    lowered = text.lower()
+    rows = []
+    async for doc in docs:
+        name = doc.get("brand_name") or doc.get("generic_name") or ""
+        starts = name.lower().startswith(lowered)
+        rows.append((0 if starts else 1, name.lower(), {
+            "id": str(doc["_id"]),
+            "name": name,
+            "generic": doc.get("composition") or doc.get("generic_name") or "",
+            "category": doc.get("category") or "",
+        }))
+    rows.sort(key=lambda r: (r[0], r[1]))
+
+    seen, out = set(), []
+    for _, _, item in rows:
+        key = item["name"].lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+        if len(out) >= limit:
+            break
+    return out
+
+
+async def get_filter_options() -> dict:
+    """Real categories (with counts) and the price range of the catalogue."""
+    db = get_database()
+    counts: dict = {}
+    low = high = None
+    async for doc in db[MEDICINES_COLLECTION].find(
+        {"is_active": {"$ne": False}}, {"category": 1, "jan_aushadhi_mrp": 1}
+    ):
+        cat = doc.get("category") or "Other"
+        counts[cat] = counts.get(cat, 0) + 1
+        price = doc.get("jan_aushadhi_mrp")
+        if isinstance(price, (int, float)):
+            low = price if low is None else min(low, price)
+            high = price if high is None else max(high, price)
+    categories = [
+        {"name": name, "count": count}
+        for name, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    ]
+    return {
+        "categories": categories,
+        "price_min": float(low or 0),
+        "price_max": float(high or 0),
+    }
+
+
+async def get_top_savings(limit: int = 12) -> list:
+    """Medicines with the biggest saving against a real brand price."""
+    db = get_database()
+    cursor = (
+        db[MEDICINES_COLLECTION]
+        .find({"is_active": {"$ne": False}, "saving_pct": {"$gt": 0}})
+        .sort([("saving_pct", -1), ("brand_name", 1)])
+        .limit(max(1, min(limit, 30)))
+    )
+    return [_serialize(doc) async for doc in cursor]

@@ -164,7 +164,6 @@ function NearbyPharmacyCard({
   onReserve,
   onViewOnMap,
 }) {
-  const [saved, setSaved] = useState(false)
 
   const availability =
     AVAILABILITY_CONFIG[pharmacy.availability] ??
@@ -309,41 +308,6 @@ function NearbyPharmacyCard({
         >
           <HiOutlineMapPin size={13} />
           Map
-        </button>
-
-        <button
-          type="button"
-          onClick={event => {
-            event.stopPropagation()
-            onReserve?.(pharmacy.id)
-          }}
-          disabled={pharmacy.availability === 'unavailable'}
-          className="flex items-center justify-center gap-1
-                     rounded-xl border border-success-300 px-3 py-2
-                     text-xs text-success-700 hover:bg-success-50
-                     disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <HiOutlineCalendarDays size={13} />
-          Reserve
-        </button>
-
-        <button
-          type="button"
-          onClick={event => {
-            event.stopPropagation()
-            setSaved(current => !current)
-          }}
-          aria-label={saved ? 'Remove saved Kendra' : 'Save Kendra'}
-          aria-pressed={saved}
-          className="flex h-8 w-8 items-center justify-center
-                     rounded-xl border border-slate-200 text-slate-400
-                     hover:border-warning-300 hover:text-warning-500"
-        >
-          {saved ? (
-            <HiBookmark size={14} />
-          ) : (
-            <HiOutlineBookmark size={14} />
-          )}
         </button>
 
         <a

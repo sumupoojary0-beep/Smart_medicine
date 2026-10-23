@@ -1,32 +1,22 @@
 /**
- * User Service
- *
- * The backend has no separate /users router — the profile of the
- * logged-in user is served by /auth/me (see Backend/app/routers/auth_router.py
- * and app/services/auth_service.py::get_current_user_profile). There is
- * also no PUT/DELETE for the user's own profile yet, and no admin
- * user-listing endpoint — those calls are left as documented TODOs
- * rather than pointed at routes that don't exist.
- *
- * Endpoints (actual backend shape):
- *  GET /auth/me   — full profile: id, full_name, email, phone_number, role, status, is_email_verified
+ * User Service: the signed-in user's own account.
+ *  GET    /auth/me                              profile
+ *  PUT    /users/me/profile                     { full_name, phone_number }
+ *  POST   /users/me/change-password             { current_password, new_password }
+ *  GET    /users/me/saved-medicines             saved list (with medicine details)
+ *  PUT    /users/me/saved-medicines/:pmbi_code  save
+ *  DELETE /users/me/saved-medicines/:pmbi_code  unsave
  */
-
 import axiosClient from '../config/axiosClient'
 
 const userService = {
   getMe: () => axiosClient.get('/auth/me'),
+  updateProfile: (data) => axiosClient.put('/users/me/profile', data),
+  changePassword: (data) => axiosClient.post('/users/me/change-password', data),
 
-  // TODO(backend): no PUT /auth/me yet — add an update-profile endpoint
-  // before wiring ProfilePage's edit form to a real call.
-  updateMe: () => {
-    throw new Error('updateMe is not implemented on the backend yet.')
-  },
-
-  // TODO(backend): no admin user-listing endpoints yet.
-  getAllUsers: () => {
-    throw new Error('getAllUsers is not implemented on the backend yet.')
-  },
+  getSavedMedicines: () => axiosClient.get('/users/me/saved-medicines'),
+  saveMedicine: (pmbiCode) => axiosClient.put(`/users/me/saved-medicines/${encodeURIComponent(pmbiCode)}`),
+  unsaveMedicine: (pmbiCode) => axiosClient.delete(`/users/me/saved-medicines/${encodeURIComponent(pmbiCode)}`),
 }
 
 export default userService

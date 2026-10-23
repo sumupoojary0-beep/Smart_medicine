@@ -6,6 +6,9 @@
  *
  * Endpoints (actual backend shape):
  *  GET    /medicines/search      — search by brand/generic name, composition, or PMBI code
+ *  GET    /medicines/suggest     — autocomplete
+ *  GET    /medicines/filters     — categories (+counts) and price range
+ *  GET    /medicines/top-savings — biggest real savings
  *  GET    /medicines/:id         — medicine detail (brand + Jan Aushadhi info + savings, pre-baked)
  *  GET    /medicines/code/:pmbi_code — lookup by PMBI code
  *  GET    /medicines             — list all (admin / pharmacy)
@@ -24,6 +27,13 @@ import axiosClient from '../config/axiosClient'
 
 const medicineService = {
   search: (params) => axiosClient.get('/medicines/search', { params }),
+
+  // Autocomplete names, real categories + price range, biggest savings
+  suggest: (q, limit = 8) => axiosClient.get('/medicines/suggest', { params: { q, limit } }),
+
+  getFilters: () => axiosClient.get('/medicines/filters'),
+
+  getTopSavings: (limit = 12) => axiosClient.get('/medicines/top-savings', { params: { limit } }),
 
   getById: (id) => axiosClient.get(`/medicines/${id}`),
 

@@ -35,8 +35,6 @@ import {
   HiOutlineViewColumns,
   HiOutlineBars3,
   HiOutlineFunnel,
-  HiOutlineArrowsRightLeft,
-  HiOutlineXMark,
 } from 'react-icons/hi2'
 import Select from '../../../components/forms/Select'
 import Badge  from '../../../components/ui/Badge'
@@ -49,8 +47,6 @@ const SORT_OPTIONS = [
   { value: 'name_desc',  label: 'Name: Z–A'          },
 ]
 
-const MAX_COMPARE = 4
-
 // ======================================
 // Results Toolbar
 // ======================================
@@ -59,16 +55,10 @@ function ResultsToolbar({
   onLayoutChange,
   sortBy          = 'relevance',
   onSortChange,
-  compareMode     = false,
-  onCompareToggle,
-  selectedCount   = 0,
-  onCompareAction,
   onFilterToggle,
   filterActive    = false,
   resultCount     = 0,
 }) {
-  const canCompare = selectedCount >= 2
-
   return (
     <div
       role="toolbar"
@@ -78,7 +68,7 @@ function ResultsToolbar({
       {/* Left — result count + sort */}
       <div className="flex items-center gap-3">
         <span className="text-xs font-semibold text-slate-600 whitespace-nowrap">
-          {resultCount} result{resultCount !== 1 ? 's' : ''}
+          {resultCount} medicine{resultCount !== 1 ? 's' : ''}
         </span>
 
         {/* Sort dropdown — reuses Select component */}
@@ -113,39 +103,6 @@ function ResultsToolbar({
           Filters
           {filterActive && <Badge variant="primary" size="sm">On</Badge>}
         </button>
-
-        {/* Compare toggle */}
-        <button
-          type="button"
-          onClick={onCompareToggle}
-          aria-label={compareMode ? 'Exit compare mode' : 'Enter compare mode'}
-          aria-pressed={compareMode}
-          className={[
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
-            compareMode
-              ? 'border-primary-400 bg-primary-50 text-primary-700'
-              : 'border-slate-200 text-slate-600 hover:border-primary-300 hover:text-primary-600',
-          ].join(' ')}
-        >
-          <HiOutlineArrowsRightLeft size={14} aria-hidden="true" />
-          Compare
-          {compareMode && selectedCount > 0 && (
-            <Badge variant="primary" size="sm">{selectedCount}/{MAX_COMPARE}</Badge>
-          )}
-        </button>
-
-        {/* Compare action — shown when 2+ selected */}
-        {compareMode && selectedCount >= 2 && (
-          <button
-            type="button"
-            onClick={onCompareAction}
-            aria-label={`Compare ${selectedCount} selected medicines`}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-semibold hover:bg-primary-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-          >
-            Compare {selectedCount}
-          </button>
-        )}
 
         {/* Grid / List toggle */}
         <div
@@ -185,18 +142,6 @@ function ResultsToolbar({
           </button>
         </div>
 
-        {/* Clear all — shown when compare mode has selections */}
-        {compareMode && selectedCount > 0 && (
-          <button
-            type="button"
-            onClick={() => onCompareToggle?.()}
-            aria-label="Exit compare mode and clear selections"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:text-danger-500 hover:border-danger-300 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-400"
-            title="Exit compare"
-          >
-            <HiOutlineXMark size={15} aria-hidden="true" />
-          </button>
-        )}
       </div>
     </div>
   )

@@ -11,6 +11,9 @@ from app.utils.constants import UserRole, DEFAULT_PAGE, DEFAULT_PAGE_SIZE
 from app.services.medicine_service import (
     create_medicine,
     search_medicines,
+    suggest_medicines,
+    get_filter_options,
+    get_top_savings,
     get_medicine_by_id,
     get_medicine_by_pmbi_code,
     update_medicine,
@@ -29,9 +32,33 @@ async def search(
     category: Optional[str] = Query(default=None),
     page: int = Query(default=DEFAULT_PAGE, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1),
+    sort: str = Query(default="relevance", pattern="^(relevance|price_asc|price_desc|name_asc|name_desc)$"),
+    min_price: Optional[float] = Query(default=None, ge=0),
+    max_price: Optional[float] = Query(default=None, ge=0),
 ):
     """Search medicines. Public — no auth required."""
-    return await search_medicines(query=q, category=category, page=page, page_size=page_size)
+    return await search_medicines(
+        query=q, category=category, page=page, page_size=page_size,
+        sort=sort, min_price=min_price, max_price=max_price,
+    )
+
+
+@router.get("/suggest")
+async def suggest(q: str = Query(default="", max_length=60), limit: int = Query(default=8, ge=1, le=15)):
+    """Autocomplete names for the search box. Public."""
+    return {"suggestions": await suggest_medicines(q, limit)}
+
+
+@router.get("/filters")
+async def filters():
+    """Real categories (with counts) and price range. Public."""
+    return await get_filter_options()
+
+
+@router.get("/top-savings")
+async def top_savings(limit: int = Query(default=12, ge=1, le=30)):
+    """Medicines with the biggest saving against a real brand price. Public."""
+    return {"results": await get_top_savings(limit)}
 
 
 @router.get("")

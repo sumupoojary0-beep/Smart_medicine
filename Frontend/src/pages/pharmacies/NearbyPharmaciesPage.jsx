@@ -17,8 +17,6 @@ import PharmacySearchSummary from './sections/PharmacySearchSummary'
 import InteractiveMapSection from './sections/InteractiveMapSection'
 import NearbyPharmacyList from './sections/NearbyPharmacyList'
 import PharmacyDetailsPanel from './sections/PharmacyDetailsPanel'
-import ReservationSection from './sections/ReservationSection'
-import NavigationPreview from './sections/NavigationPreview'
 import PharmacyWorkflowTimeline from './sections/PharmacyWorkflowTimeline'
 import PharmacyTips from './sections/PharmacyTips'
 
@@ -268,17 +266,6 @@ function NearbyPharmaciesPage() {
   }
 
 
-  function handleReserve(pharmacyId) {
-    setSelectedId(pharmacyId)
-
-    document
-      .getElementById('reservation-section')
-      ?.scrollIntoView({
-        behavior: 'smooth',
-      })
-  }
-
-
   // =====================================================
   // Page UI
   // =====================================================
@@ -432,25 +419,10 @@ function NearbyPharmaciesPage() {
               onViewDetails={
                 handleViewDetails
               }
-              onReserve={handleReserve}
             />
           )}
 
 
-          {/* Reservation */}
-
-          <div id="reservation-section">
-            <ReservationSection
-              pharmacyId={selectedId}
-            />
-          </div>
-
-
-          {/* Navigation */}
-
-          <NavigationPreview
-            pharmacy={selectedPharmacy}
-          />
         </div>
 
 

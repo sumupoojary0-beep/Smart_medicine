@@ -18,8 +18,6 @@ import MedicineInfoTabs
   from './sections/MedicineInfoTabs'
 import ActionPanel
   from './sections/ActionPanel'
-import SimilarMedicinesSection
-  from './sections/SimilarMedicinesSection'
 import HealthcareDisclaimer
   from './sections/HealthcareDisclaimer'
 
@@ -406,9 +404,10 @@ function MedicineDetailsPage() {
             pmbiCode={medicine.pmbiCode}
           />
 
-          <MedicineInfoTabs />
-
-          <SimilarMedicinesSection />
+          <MedicineInfoTabs
+            medicine={medicine}
+            generic={genericMedicine}
+          />
 
           <HealthcareDisclaimer />
         </div>
